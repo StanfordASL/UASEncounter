@@ -1,0 +1,117 @@
+Thu 26 Feb 2015 02:23:11 PM PST
+[-] git
+[-] rewrite features
+[ ] extract and test policy vs accelerations and TRL
+
+[X] get policy extraction working
+[X] figure out how to save policies
+    [X] a type that I can save in a file that represents a policy
+    [X] a type that exists in memory
+    [X] make_record, extract_record
+[ ] run with flat grid with accel action
+[ ] run with flat grid with trl actions
+[ ] compare all three
+
+[ ] fit kaelbling features in notebook
+
+Wed 25 Feb 2015 09:43:47 AM PST
+changed intruder noise to 15 deg from 5
+it seems like now 50k simulations is taking ~100 seconds - why?
+
+[X] notebook to demonstrate peaks problem to Marco
+[ ] figure out how to save policies
+[ ] test policy vs TRL
+[ ] rewrite features module
+
+Tue 24 Feb 2015 10:28:27 AM PST
+with explicit garbage collection before matrix inversion 100k still uses swap: 260 seconds
+
+Mon 23 Feb 2015 05:45:08 PM PST
+no memory help, gc mod 50, 50k sims: 45 seconds 
+memory help, gc free, 50k sims: 54 seconds
+no memory help, gc free, 50k sims: 121 seconds
+
+Mon 23 Feb 2015 03:54:37 PM PST
+For tomorrow
+[X] Memory
+[ ] extract policy
+[ ] Fit Kaelbling Features
+
+[ ] Augment State with Deviation?
+
+Fri 20 Feb 2015 11:24:30 AM PST
+[X] Profile Sparse
+[ ] Rework features for less allocation
+    - 6 workers, 50 k simulations, delayed garbage collection mod 100 = ~45 seconds for simulation
+        200 singular values, 85 seconds - matrix inversion ended up with NaNs?
+        all singular values, killed after ~8 minutes
+        200 singular values, tol = 0.1, 58 seconds - Nans
+    [ ] First, run with svds to see if it even works with 50k
+[X] refactor actions
+[X] Try actions
+[ ] extract policy
+[ ] Fit Kaelbling Features
+[ ] Try Gaussians
+
+Thu 19 Feb 2015 06:52:44 PM PST
+[X] refactor value iteration into module
+[X] profile
+[ ] refactor actions
+[ ] extract policy
+
+Wed 18 Feb 2015 05:33:52 PM PST
+[ ] grid interpolations for both intruder and goal
+[ ] ...
+
+Sun 15 Feb 2015 11:49:10 PM PST
+[X] exponential grid
+[X] interact
+[ ] lit feature justification
+[X] homework!!!!
+
+Sun 15 Feb 2015 08:42:00 PM PST
+[/] Try with just linear features (no grid)
+[X] Try with finer grid
+
+Sun 15 Feb 2015 04:18:48 PM PST
+[-] Try pinv instead of SVD
+
+Sat 14 Feb 2015 11:24:20 PM PST
+[-] Try moving intruder ?????
+[ ] READ!!!
+
+Sat 14 Feb 2015 03:39:28 PM PST
+[X] try with intruder eliminated
+[X] write brute force evaluator
+[X] implement goal grid
+
+Mon 26 Jan 2015 10:25:17 AM PST
+
+[?] add explicit cost features
+[ ] ProfileView
+[ ] plot r
+
+Fri 23 Jan 2015 01:42:29 PM PST
+
+[ ] define typealias post-decision state
+[ ] update decision equations
+[ ] run iterations
+
+
+Sat 10 Jan 2015 04:33:02 PM PST
+[ ] define feature function
+[ ] solve offline
+[ ] run tests
+
+How do I make sure the matrices are full rank?
+
+Future
+[ ] Expand TRL to include 
+
+Other ideas
+Try this with/without TRL
+
+Tue 13 Jan 2015 12:28:31 AM PST
+Junkins and Crassidis p 8
+y = step_reward
+
