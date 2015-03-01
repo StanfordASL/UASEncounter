@@ -3,7 +3,7 @@ module EncounterSimulation
 using EncounterModel
 using EncounterFeatures: AssembledFeatureBlock
 
-export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record
+export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state
 
 abstract EncounterPolicy
 function make_record(policy::EncounterPolicy)
@@ -20,7 +20,7 @@ type LinearQValuePolicy <: EncounterPolicy
 end
 function query_policy(p::LinearQValuePolicy, state::EncounterState)
     qs=Array(Float64, length(p.actions))
-    for i in 1:p.phi.length
+    for i in 1:length(qs)
         qs[i] = sum(p.phi.features(state)'*p.lambdas[i])
     end
     return p.actions[indmax(qs)]
@@ -44,9 +44,6 @@ end
 function query_policy(p::ConstPolicy, state::EncounterState)
     return p.action
 end
-# function query_policy(p::LinearQFactorExtractionPolicy, state::EncounterState)
-#     Qs = 
-# end
 
 type EncounterTestInputData
     id
@@ -61,7 +58,25 @@ type EncounterTestInputData
     policy::EncounterPolicy
 
     EncounterTestInputData() = new()
-    EncounterTestInputData(initial::EncounterState) = new(-1, INTRUDER, OWNSHIP, SIM, initial, 0, 200, ConstPolicy(HeadingHRL(SIM.legal_D)))
+    EncounterTestInputData(initial::EncounterState; policy::EncounterPolicy=ConstPolicy(HeadingHRL(SIM.legal_D)), seed::Int=0) = new(nothing,INTRUDER, OWNSHIP, SIM, initial, seed, 200, policy)
+end
+type EncounterTestInputRecord # can be saved to disk
+    id
+
+    ip::IntruderParams
+    op::OwnshipParams
+    sim::SimParams
+    initial::EncounterState
+    random_seed::Int
+    steps::Int
+
+    policy_record
+end
+function make_record(tid::EncounterTestInputData)
+    return EncounterTestInputRecord(tid.id, tid.ip, tid.op, tid.sim, tid.initial, tid.random_seed, tid.steps, make_record(tid.policy))
+end
+function extract_from_record(r::EncounterTestInputRecord)
+    return EncounterTestInputData(r.id, r.ip, r.op, r.sim, r.initial, r.random_seed, r.steps, extract_from_record(r.policy_record))
 end
 
 type EncounterTestOutputData
@@ -77,14 +92,21 @@ type EncounterTest
     output::EncounterTestOutputData
 
     EncounterTest() = new()
+    EncounterTest(input::EncounterTestInputData) = new(input, EncounterTestOutputData())
     EncounterTest(initial::EncounterState) = new(EncounterTestInputData(initial), EncounterTestOutputData())
 end
+type EncounterTestRecord
+    input_record::EncounterTestInputRecord
+    output::EncounterTestOutputData
+end
+function make_record(t::EncounterTest)
+    return EncounterTestRecord(make_record(t.input), t.output)
+end
+function extract_from_record(r::EncounterTestRecord)
+    return EncounterTest(extract_from_record(r.input_record), r.output)
+end
 
-function gen_test(rng::AbstractRNG)
-    t = EncounterTest()
-    t.input = EncounterTestInputData()
-    t.output = EncounterTestOutputData()
-
+function gen_init_state(rng::AbstractRNG)
     ix = 1000.0*rand(rng)
     iy = 2000.0*(rand(rng)-0.5)
     ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
@@ -93,49 +115,103 @@ function gen_test(rng::AbstractRNG)
     oy = 0.0
     ohead = 0.0
 
-    t.input.id = 0
-
-    t.input.ip = IntruderParams(60.0, 5.0/180.0*pi)
-    t.input.op = OwnshipParams(30.0, 45.0/180.0*pi, 1.0)
-    t.input.sim = SimParams(1.0, 9.8, [1000.0,0.0], 100.0, 100.0, 0.95)
-
-    t.input.initial = EncounterState([ox,oy,ohead],[ix, iy, ihead],false)
-    t.input.random_seed = 0
-    t.input.steps = 200
-
-    return t
+    return EncounterState([ox,oy,ohead],[ix, iy, ihead],false)
 end
 
-function run!(test::EncounterTest; announce=true)
+
+# function gen_test(rng::AbstractRNG, policy::EncounterPolicy)
+#     t = EncounterTest()
+#     t.input = EncounterTestInputData()
+#     t.output = EncounterTestOutputData()
+# 
+#     ix = 1000.0*rand(rng)
+#     iy = 2000.0*(rand(rng)-0.5)
+#     ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
+# 
+#     ox = 0.0
+#     oy = 0.0
+#     ohead = 0.0
+# 
+#     t.input.id = 0
+# 
+#     t.input.ip = INTRUDER
+#     t.input.op = OWNSHIP
+#     t.input.sim = SIM
+# 
+#     t.input.initial = EncounterState([ox,oy,ohead],[ix, iy, ihead],false)
+#     t.input.random_seed = 0
+#     t.input.steps = 200
+# 
+#     t.input.policy = EncounterPolicy
+# 
+#     return t
+# end
+
+function run!(test::EncounterTest; announce=true, store_hist=true)
     if announce
         println("Running test $(test.input.id).")
     end
 
-    function getNextState(s::EncounterState,a::HeadingHRL,rng::AbstractRNG)
+    function getNextState(s::EncounterState,a::EncounterAction,rng::AbstractRNG)
         return encounter_dynamics(test.input.sim, test.input.op, test.input.ip, s, a, rng)
     end
 
-    function getReward(s::EncounterState, a::HeadingHRL)
+    function getReward(s::EncounterState, a::EncounterAction)
         return reward(test.input.sim, test.input.op, test.input.ip, s, a)
     end
 
     rng = MersenneTwister(test.input.random_seed)
     r = 0.
     s = test.input.initial
-    test.output.states = Array(Any, test.input.steps+1)
-    test.output.actions = Array(Any, test.input.steps)
+    if store_hist
+        test.output.states = Array(Any, test.input.steps+1)
+        test.output.actions = Array(Any, test.input.steps)
+    else
+        test.output.states = {}
+        test.output.actions = {}
+    end
+
     for i = 1:test.input.steps
         a = query_policy(test.input.policy, s)
         r += getReward(s,a)
-        test.output.states[i] = s
-        test.output.actions[i] = a
+        if store_hist
+            test.output.states[i] = s
+            test.output.actions[i] = a
+        end
         s = getNextState(s,a,rng)
     end
     a = query_policy(test.input.policy, s)
     test.output.reward = r + getReward(s, a)
-    test.output.states[end] = s
+    if store_hist
+        test.output.states[end] = s
+    end
 
     return test
+end
+
+function run!(tests::Vector{EncounterTest}; store_hist=true, parallel=false, batch_size=100)
+    if parallel
+        num_batches = int(ceil(length(tests)/batch_size))
+
+        println("spawning $(length(tests)) simulations...")
+        refs = Array(Any, num_batches)
+        for b in 1:num_batches
+            test_range = (b-1)*batch_size+1:min(length(tests),b*batch_size)
+            batch = tests[test_range]
+            refs[b] = @spawn run!(batch, parallel=false, store_hist=store_hist)
+        end
+        for b in 1:num_batches 
+            test_range = (b-1)*batch_size+1:min(length(tests),b*batch_size)
+            print("\rwaiting for test batch $b of $num_batches...")
+            tests[test_range] = fetch(refs[b])
+        end
+        println("\rdone with simulations")
+    else
+        for i in 1:length(tests)
+            run!(tests[i]; announce=false, store_hist=store_hist)
+        end
+    end
+    return tests
 end
 
 end

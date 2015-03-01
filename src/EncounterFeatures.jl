@@ -164,8 +164,8 @@ function f_half_intruder_bin_grid(state, p::Dict{Symbol, Any}=[:num_intruder_dis
     while bearing < -pi bearing += 2*pi end
     # relative heading of ownship compared to intruder
     heading = os[3] - is[3]
-    if heading >= 2*pi heading -= 2*pi end
-    if heading < 0.0 heading += 2*pi end
+    while heading >= 2*pi heading -= 2*pi end
+    while heading < 0.0 heading += 2*pi end
 
     dist_ind = convert(Int64, ceil(min(d/p[:max_intruder_dist],1)*p[:num_intruder_dist]))
     # dist_ind = convert(Int64, ceil(min(sqrt(d)/sqrt(p[:max_intruder_dist]),1)*p[:num_intruder_dist]))
@@ -179,6 +179,13 @@ function f_half_intruder_bin_grid(state, p::Dict{Symbol, Any}=[:num_intruder_dis
 
     idx = (dist_ind-1)*p[:num_intruder_heading]*p[:num_intruder_bearing] + (bearing_ind-1)*p[:num_intruder_heading] + heading_ind
     # @assert idx <= num_intruder_heading && idx > 0
+
+    if idx < 1 || idx > length(phi)
+        @show bearing_ind, heading_ind, dist_ind
+        @show num_intruder_cells
+        @show length(phi)
+        @show idx
+    end
 
     # phi[idx, 1] = 1
     phi[idx] = 1
