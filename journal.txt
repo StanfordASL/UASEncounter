@@ -1,3 +1,8 @@
+Sun 01 Mar 2015 12:05:55 AM PST
+[ ] write out reward function
+[ ] investigate gain
+[ ] new cost function
+
 Thu 26 Feb 2015 02:23:11 PM PST
 [-] git
 [-] rewrite features
