@@ -58,7 +58,7 @@ type EncounterTestInputData
     policy::EncounterPolicy
 
     EncounterTestInputData() = new()
-    EncounterTestInputData(initial::EncounterState; policy::EncounterPolicy=ConstPolicy(HeadingHRL(SIM.legal_D)), seed::Int=0) = new(nothing,INTRUDER, OWNSHIP, SIM, initial, seed, 200, policy)
+    EncounterTestInputData(initial::EncounterState; policy::EncounterPolicy=ConstPolicy(HeadingHRL(SIM.legal_D)), seed::Int=0,id=nothing) = new(id,INTRUDER, OWNSHIP, SIM, initial, seed, 200, policy)
 end
 type EncounterTestInputRecord # can be saved to disk
     id

@@ -24,7 +24,7 @@ t_pol = extract_from_record(pol_data["accel_policy"])
 @show pol_data["accel_policy"].phi_desc
 
 # generate tests
-num_tests = 10000
+num_tests = 100
 
 tests=EncounterTest[]
 
@@ -33,16 +33,20 @@ for i=1:num_tests
     state = gen_init_state(rng)
     push!(tests, EncounterTest(EncounterTestInputData(state,
                                                       policy=g_pol,
-                                                      seed=i)))
+                                                      seed=i,
+                                                      id=(:g,i))))
     push!(tests, EncounterTest(EncounterTestInputData(state,
                                                       policy=c_pol,
-                                                      seed=i)))
+                                                      seed=i,
+                                                      id=(:c,i))))
     push!(tests, EncounterTest(EncounterTestInputData(state,
                                                       policy=o_pol,
-                                                      seed=i)))
+                                                      seed=i,
+                                                      id=(:o,i))))
     push!(tests, EncounterTest(EncounterTestInputData(state,
                                                       policy=t_pol,
-                                                      seed=i)))
+                                                      seed=i,
+                                                      id=(:t,i))))
 end
 
 # run tests
@@ -60,10 +64,10 @@ println("saving results...")
 tic()
 # JLD.save("../data/policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
 # JLD.save("/mnt/data/zach_policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
-g_rewards = [t.reward for t in filter(t->t.input.policy==g_pol, tests)]
-c_rewards = [t.reward for t in filter(t->t.input.policy==c_pol, tests)]
-o_rewards = [t.reward for t in filter(t->t.input.policy==o_pol, tests)]
-t_rewards = [t.reward for t in filter(t->t.input.policy==t_pol, tests)]
+@show g_rewards = Float64[t.output.reward for t in filter(t->t.input.id[1]==:g, tests)]
+@show c_rewards = Float64[t.output.reward for t in filter(t->t.input.id[1]==:c, tests)]
+@show o_rewards = Float64[t.output.reward for t in filter(t->t.input.id[1]==:o, tests)]
+@show t_rewards = Float64[t.output.reward for t in filter(t->t.input.id[1]==:t, tests)]
 JLD.@save "../data/policy_rewards.jld" g_rewards c_rewards o_rewards t_rewards
 toc()
 
