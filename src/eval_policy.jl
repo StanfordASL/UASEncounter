@@ -24,7 +24,7 @@ t_pol = extract_from_record(pol_data["accel_policy"])
 @show pol_data["accel_policy"].phi_desc
 
 # generate tests
-num_tests = 100
+num_tests = 10000
 
 tests=EncounterTest[]
 
@@ -58,6 +58,7 @@ end
 # save results
 println("saving results...")
 tic()
-JLD.save("../data/policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
+# JLD.save("../data/policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
+JLD.save("/mnt/data/zach_policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
 toc()
 
