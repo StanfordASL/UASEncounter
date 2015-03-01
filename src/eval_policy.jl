@@ -59,6 +59,11 @@ end
 println("saving results...")
 tic()
 # JLD.save("../data/policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
-JLD.save("/mnt/data/zach_policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
+# JLD.save("/mnt/data/zach_policy_tests_$(Dates.now()).jld", "test_records", [make_record(t) for t in tests])
+g_rewards = [t.reward for t in filter(t->t.input.policy==g_pol, tests)]
+c_rewards = [t.reward for t in filter(t->t.input.policy==c_pol, tests)]
+o_rewards = [t.reward for t in filter(t->t.input.policy==o_pol, tests)]
+t_rewards = [t.reward for t in filter(t->t.input.policy==t_pol, tests)]
+JLD.@save "../data/policy_rewards.jld" g_rewards c_rewards o_rewards t_rewards
 toc()
 

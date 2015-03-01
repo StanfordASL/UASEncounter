@@ -45,7 +45,8 @@ type AssembledFeatureBlock
     features::Function
     dense::Bool
     memory::Bool
-    description::Vector{String}
+    # description::Vector{String}
+    description::Vector{ASCIIString}
 end
 function AssembledFeatureBlock{T<:String}(features::Function, description::Vector{T}; memory=false)
     f = features(gen_test_state())
