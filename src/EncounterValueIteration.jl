@@ -4,9 +4,10 @@ module EncounterValueIteration
 using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM
 using EncounterFeatures: AssembledFeatureBlock
 using EncounterSimulation: LinearQValuePolicy
+using GridInterpolations
 import SVDSHack
 
-export run_sims, iterate, extract_policy
+export run_sims, iterate, extract_policy, gen_state_snap_to_grid
 
 function gen_state(rng::AbstractRNG)
     ix = 1000.0*rand(rng)
@@ -23,7 +24,58 @@ function gen_state(rng::AbstractRNG)
     return EncounterState([ox,oy,ohead],[ix, iy, ihead],false)
 end
 
-function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, lambda::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int)
+function gen_state_snap_to_grid(rng::AbstractRNG, grid)
+    state=gen_state(rng)
+    
+    is = state.is
+    os = state.os
+
+    d = norm(os[1:2]-is[1:2])-SIM.legal_D
+
+    # bearing to ownship from intruder's perspective
+    bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+    while bearing >= pi bearing -= 2*pi end
+    while bearing < -pi bearing += 2*pi end
+    # relative heading of ownship compared to intruder
+    heading = os[3] - is[3]
+    while heading >= 2*pi heading -= 2*pi end
+    while heading < 0.0 heading += 2*pi end
+
+    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(grid.cutPoints[1])
+        return state
+    end
+
+    inds, weights = interpolants(grid, [d, bearing, heading])
+
+    # @show ind2x(grid, inds[indmax(weights)])
+    (dnew,bnew,hnew) = ind2x(grid, inds[indmax(weights)])
+
+    state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
+    state.os[3] = hnew+is[3]
+
+    # DEBUG
+    # is = state.is
+    # os = state.os
+
+    # d = norm(os[1:2]-is[1:2])-SIM.legal_D
+
+    # # bearing to ownship from intruder's perspective
+    # bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+    # while bearing >= pi bearing -= 2*pi end
+    # while bearing < -pi bearing += 2*pi end
+    # # relative heading of ownship compared to intruder
+    # heading = os[3] - is[3]
+    # while heading >= 2*pi heading -= 2*pi end
+    # while heading < 0.0 heading += 2*pi end
+
+    # @show (dnew,d)
+    # @show (bnew,bearing)
+    # @show (hnew,heading)
+
+    return state
+end
+
+function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, lambda::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
     has_data = Set{Int64}()
     phis = Any[]
     v = Array(Float64, N)
@@ -34,9 +86,12 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, la
     # gc_disable()
 
     for n in 1:N
-        sn = gen_state(rng)
+        if n <= length(ic_batch)
+            sn = ic_batch[n]
+        else
+            sn = state_gen(rng)
+        end
 
-        # v_sums = Array(Float64, length(ACTIONS))
         v_sums = zeros(length(actions))
 
         for m in 1:length(actions)
@@ -59,7 +114,6 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, la
         # end
 
         v[n] = reward(sn) + maximum(v_sums)/NEV
-        # v[n] = maximum(v_sums)/NEV
 
         feat = new_phi.features(sn)
         push!(phis, feat)
@@ -75,7 +129,19 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, la
     return (phis, has_data, v)
 end
 
-function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock, lambda::AbstractVector{Float64}, actions::Vector{A}, num_sims::Int; new_phi=nothing, num_EV::Int=20, rng_seed_offset::Int=0, sims_per_spawn::Int=1000, convert_to_sparse=false, parallel=true)
+function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
+                                     lambda::AbstractVector{Float64},
+                                     actions::Vector{A},
+                                     num_sims::Int;
+                                     new_phi=nothing,
+                                     num_EV::Int=20,
+                                     rng_seed_offset::Int=0,
+                                     sims_per_spawn::Int=1000,
+                                     convert_to_sparse=false,
+                                     parallel=true,
+                                     state_gen::Function=gen_state,
+                                     ic_batch::Vector{EncounterState}=EncounterState[])
+
     if new_phi==nothing
         new_phi = phi
     end
@@ -88,10 +154,11 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock, lambda::Abstrac
     println("spawning simulations...")
     refs = Any[]
     for i in 1:int(num_sims/sims_per_spawn)
+        ic_batch_part=ic_batch[(i-1)*sims_per_spawn+1:min(i*sims_per_spawn,length(ic_batch))]
         if parallel
-            push!(refs, @spawn run_sims(new_phi, phi, lambda, actions, sims_per_spawn, num_EV, rng_seed_offset+i))
+            push!(refs, @spawn run_sims(new_phi, phi, lambda, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
         else
-            push!(refs, run_sims(new_phi, phi, lambda, actions, sims_per_spawn, num_EV, rng_seed_offset+i))
+            push!(refs, run_sims(new_phi, phi, lambda, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
             println("Finished batch $i")
         end
     end
@@ -124,6 +191,7 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock, lambda::Abstrac
         for n in 1:num_sims
             Phi[n,:] = phirows[n]
         end
+        @show rank(Phi)
     else
         println("Phi is sparse ($num_sims x $(length(has_data)))")
 

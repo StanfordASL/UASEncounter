@@ -4,8 +4,8 @@
 @everywhere using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, HeadingHRL, BankControl, ownship_control, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM, OWNSHIP
 # @everywhere using WHack
 @everywhere using EncounterFeatures
-@everywhere using GridInterpolations: SimplexGrid, RectangleGrid
-@everywhere using EncounterValueIteration: run_sims, iterate
+@everywhere using GridInterpolations
+@everywhere using EncounterValueIteration
 import EncounterVisualization
 import SVDSHack
 import HDF5, JLD
@@ -21,6 +21,7 @@ import Dates
     intruder_dist_points = linspace(0.0, 700.0, 12) 
     intruder_bearing_points = linspace(-pi/2, pi/2, 12)
     intruder_heading_points = linspace(0.0, 2*pi, 12)
+    intruder_grid = RectangleGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points)
 #     intruder_dist_points = linspace(0.0, 700.0, 16) 
 #     intruder_bearing_points = linspace(-pi/2, pi/2, 16)
 #     intruder_heading_points = linspace(0.0, 2*pi, 12)
@@ -35,14 +36,45 @@ import Dates
         f_goal_dist,
         f_one,
         ParameterizedFeatureFunction(f_radial_goal_grid, RectangleGrid(goal_dist_points, goal_bearing_points), true),
-        # ParameterizedFeatureFunction(f_focused_intruder_grid, RectangleGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points), true),
-        ParameterizedFeatureFunction(f_half_intruder_bin_grid, half_intruder_grid_param, true),
+        ParameterizedFeatureFunction(f_focused_intruder_grid, intruder_grid, true),
+        # ParameterizedFeatureFunction(f_half_intruder_bin_grid, half_intruder_grid_param, true),
         f_conflict,
         # f_intruder_dist,
     ]
     # features = f_radial_intruder_grid
     phi = assemble(features)
     NEV = 20
+end
+
+function gen_ic_batch_for_grid(rng, grid)
+    ics = Array(EncounterState, length(grid))
+    for i in 1:length(grid)
+        ix = 1000.0*rand(rng)
+        iy = 2000.0*(rand(rng)-0.5)
+        ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
+        is = [ix, iy, ihead]
+        (dnew,bnew,hnew) = ind2x(grid,i)
+        if dnew <= 0.0
+            dnew+=1e-5
+        end
+        if bnew > pi/2 - 1e-5
+            @show bnew
+            bnew-=1e-5
+        end
+        if bnew < -pi/2 + 1e-5
+            @show bnew
+            bnew+=1e-5
+        end
+        os = [is[1]+(dnew+SIM.legal_D)*cos(is[3]+bnew),
+              is[2]+(dnew+SIM.legal_D)*sin(is[3]+bnew),
+              is[3]+hnew]
+        ics[i] = EncounterState(os, is, false)
+        feat = f_focused_intruder_grid(ics[i],grid)
+        if length(find(feat))==0
+            @show (dnew,bnew,hnew)
+        end
+    end
+    return ics
 end
 
 @show phi.description
@@ -57,26 +89,18 @@ rng0 = MersenneTwister(0)
 lambda = zeros(phi.length)
 plot_is = [550.0, -300.0, pi/180.0*135.0]
 plot_heading = 0.0
+@everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
 try
     for i in 1:30
         sims_per_policy = 50000
-        # sims_per_policy = 100000
         println("starting policy iteration $i ($sims_per_policy simulations)")
-        # lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, convert_to_sparse=true)
-        lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1)
+        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+        lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
         println("max difference: $(norm(lambda_new - lambda, Inf))")
         println("2-norm difference: $(norm(lambda_new - lambda))")
         EncounterVisualization.plot_value_grid(phi, lambda_new, plot_is, plot_heading, 100)
         lambda = lambda_new
     end
-#     for i in 21:22
-#         sims_per_policy = 100000
-#         println("starting policy iteration $i ($sims_per_policy simulations)")
-#         r_new = iterate(r, sims_per_policy, i*1000000)
-#         println("max difference: $(norm(r_new - r, Inf))")
-#         println("2-norm difference: $(norm(r_new - r))")
-#         r = r_new
-#     end
     JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)
 catch e
     JLD.save("../data/ERROR_$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)

@@ -1,6 +1,18 @@
+Mon 02 Mar 2015 01:17:20 PM PST
+ran some tests with snap generation - doesn't fill the space very well... maybe need to generate one for each node at least
+Phi size: 50k x 1882, Phi rank:1706
+[ ] generate ics on all gridpoints, snap others
+[ ] launch both versions
+derive gradient descent
+
+Sun 01 Mar 2015 11:53:21 PM PST
+tomorrow
+[X] test generation functions
+[ ] look at some tests where turning wins
+
 Sun 01 Mar 2015 12:05:55 AM PST
-[ ] write out reward function
-[ ] investigate gain
+[X] write out reward function
+[X] investigate gain
 [ ] new cost function
 
 Thu 26 Feb 2015 02:23:11 PM PST

@@ -119,18 +119,26 @@ function f_focused_intruder_grid(state, grid::AbstractGrid; memory::AbstractVect
     while bearing < -pi bearing += 2*pi end
     # relative heading of ownship compared to intruder
     heading = os[3] - is[3]
-    if heading >= 2*pi heading -= 2*pi end
-    if heading < 0.0 heading += 2*pi end
+    while heading >= 2*pi heading -= 2*pi end
+    while heading < 0.0 heading += 2*pi end
 
-    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0
+    if bearing > pi/2 || bearing < -pi/2 || d < 0.0
         return phi
     end
 
     inds, weights = interpolants(grid, [d, bearing, heading])
+    # if maximum(weights) < 0.95
+    #     @show bearing
+    #     @show heading
+    #     @show d
+    #     @show ind2x(grid, inds[indmax(weights)])
+    # end
+    # @assert maximum(weights) > 0.95
 
-    for i in 1:length(inds)
-        phi[inds[i]] = weights[i]
-    end
+    phi[inds] = weights
+    # for i in 1:length(inds)
+    #     phi[inds[i]] = weights[i]
+    # end
     return phi
 end
 
