@@ -76,11 +76,11 @@ function gen_ic_batch_for_grid(rng, grid)
 end
 
 @show phi.description
-@show file_prefix = "accel_for_policy_extraction"
+@show file_prefix = "nice_trl"
 
 @everywhere const lD = SIM.legal_D
-# @everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.1*lD, 1.2*lD, 1.5*lD, 2.0*lD]]
-@everywhere const ACTIONS = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
+@everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.1*lD, 1.2*lD, 1.5*lD, 2.0*lD]]
+# @everywhere const ACTIONS = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 rng0 = MersenneTwister(0)
 
@@ -90,7 +90,7 @@ plot_heading = 0.0
 @everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
 try
     for i in 1:30
-        sims_per_policy = 50000
+        sims_per_policy = 5000
         println("starting policy iteration $i ($sims_per_policy simulations)")
         ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
         lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
@@ -106,8 +106,8 @@ try
     JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)
 catch e
     JLD.save("../data/ERROR_$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)
-    run(`sdo false`)
+    # run(`sdo false`)
     rethrow(e)
 end
 
-run(`sdo true`)
+# run(`sdo true`)
