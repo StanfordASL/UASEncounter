@@ -122,7 +122,7 @@ function f_focused_intruder_grid(state, grid::AbstractGrid; memory::AbstractVect
     while heading >= 2*pi heading -= 2*pi end
     while heading < 0.0 heading += 2*pi end
 
-    if bearing > pi/2 || bearing < -pi/2 || d < 0.0
+    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0
         return phi
     end
 

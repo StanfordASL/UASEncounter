@@ -58,11 +58,9 @@ function gen_ic_batch_for_grid(rng, grid)
             dnew+=1e-5
         end
         if bnew > pi/2 - 1e-5
-            @show bnew
             bnew-=1e-5
         end
         if bnew < -pi/2 + 1e-5
-            @show bnew
             bnew+=1e-5
         end
         os = [is[1]+(dnew+SIM.legal_D)*cos(is[3]+bnew),
@@ -98,7 +96,11 @@ try
         lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
         println("max difference: $(norm(lambda_new - lambda, Inf))")
         println("2-norm difference: $(norm(lambda_new - lambda))")
-        EncounterVisualization.plot_value_grid(phi, lambda_new, plot_is, plot_heading, 100)
+        try
+            EncounterVisualization.plot_value_grid(phi, lambda_new, plot_is, plot_heading, 100)
+        catch e
+            println(e)
+        end
         lambda = lambda_new
     end
     JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)

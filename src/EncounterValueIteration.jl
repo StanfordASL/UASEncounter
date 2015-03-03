@@ -49,6 +49,9 @@ function gen_state_snap_to_grid(rng::AbstractRNG, grid)
 
     # @show ind2x(grid, inds[indmax(weights)])
     (dnew,bnew,hnew) = ind2x(grid, inds[indmax(weights)])
+    if dnew == 0.0
+        dnew += 1e-5
+    end
 
     state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
     state.os[3] = hnew+is[3]
@@ -191,7 +194,7 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
         for n in 1:num_sims
             Phi[n,:] = phirows[n]
         end
-        @show rank(Phi)
+        # @show rank(Phi)
     else
         println("Phi is sparse ($num_sims x $(length(has_data)))")
 

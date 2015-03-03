@@ -102,7 +102,7 @@ function reward(sim::SimParams, op::OwnshipParams, ip::IntruderParams, state::En
     if norm(state.os[1:2]-sim.goal_location) <= sim.goal_radius
         r+=1000
     end
-    if dist(state) < sim.legal_D
+    if dist(state) <= sim.legal_D
         r-=10000
     end
 
