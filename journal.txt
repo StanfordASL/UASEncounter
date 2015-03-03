@@ -1,9 +1,14 @@
+Mon 02 Mar 2015 11:19:16 PM PST
+comparing pinv with l_bfgs
+pinv takes 85 seconds to invert on Theresa
+lbfgs 433 seconds the first time, 384 the second, 270, 277 - this is not competitive
+
 Mon 02 Mar 2015 01:17:20 PM PST
 ran some tests with snap generation - doesn't fill the space very well... maybe need to generate one for each node at least
 Phi size: 50k x 1882, Phi rank:1706
-[ ] generate ics on all gridpoints, snap others
-[ ] launch both versions
-derive gradient descent
+[X] generate ics on all gridpoints, snap others
+[?] launch both versions
+[X] derive gradient descent
 
 Sun 01 Mar 2015 11:53:21 PM PST
 tomorrow

@@ -262,13 +262,6 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
             new_lambda[i] = lambda[i]
         end
     end
-    # fill_r!(new_r, need_data)
-
-#     println("filling...")
-# 
-#     new_r[small_to_full] = r_est
-#     need_data = setdiff!(Set{Int64}(1:length(new_r)), has_data)
-#     fill_r!(new_r, need_data)
 
     return new_lambda
 end
