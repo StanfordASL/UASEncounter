@@ -1,3 +1,12 @@
+Tue 03 Mar 2015 03:37:19 PM PST
+[X] Plot policies
+    [N] Consider pgfplots
+        [X] Import speed - PGF takes about 10s, Pyplot about 20s
+        [ ] Image Performance
+        [ ] Arrows
+    [ ] Plot policy only where it matters
+[ ] Rerun simulations with more actions
+
 Mon 02 Mar 2015 11:19:16 PM PST
 comparing pinv with l_bfgs
 pinv takes 85 seconds to invert on Theresa

@@ -2,12 +2,12 @@
 module EncounterValueIteration
 
 using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM
-using EncounterFeatures: AssembledFeatureBlock
+using EncounterFeatures: AssembledFeatureBlock, f_focused_intruder_grid
 using EncounterSimulation: LinearQValuePolicy
 using GridInterpolations
 import SVDSHack
 
-export run_sims, iterate, extract_policy, gen_state_snap_to_grid
+export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid
 
 function gen_state(rng::AbstractRNG)
     ix = 1000.0*rand(rng)
@@ -24,6 +24,7 @@ function gen_state(rng::AbstractRNG)
     return EncounterState([ox,oy,ohead],[ix, iy, ihead],false)
 end
 
+# HACK
 function gen_state_snap_to_grid(rng::AbstractRNG, grid)
     state=gen_state(rng)
     
@@ -77,6 +78,37 @@ function gen_state_snap_to_grid(rng::AbstractRNG, grid)
 
     return state
 end
+
+# HACK
+function gen_ic_batch_for_grid(rng, grid)
+    ics = Array(EncounterState, length(grid))
+    for i in 1:length(grid)
+        ix = 1000.0*rand(rng)
+        iy = 2000.0*(rand(rng)-0.5)
+        ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
+        is = [ix, iy, ihead]
+        (dnew,bnew,hnew) = ind2x(grid,i)
+        if dnew <= 0.0
+            dnew+=1e-5
+        end
+        if bnew > pi/2 - 1e-5
+            bnew-=1e-5
+        end
+        if bnew < -pi/2 + 1e-5
+            bnew+=1e-5
+        end
+        os = [is[1]+(dnew+SIM.legal_D)*cos(is[3]+bnew),
+              is[2]+(dnew+SIM.legal_D)*sin(is[3]+bnew),
+              is[3]+hnew]
+        ics[i] = EncounterState(os, is, false)
+        feat = f_focused_intruder_grid(ics[i],grid)
+        if length(find(feat))==0
+            @show (dnew,bnew,hnew)
+        end
+    end
+    return ics
+end
+
 
 function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, lambda::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
     has_data = Set{Int64}()
@@ -266,7 +298,15 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     return new_lambda
 end
 
-function extract_policy(phi::AssembledFeatureBlock, lambda::AbstractVector{Float64}, actions::Vector{EncounterAction}, num_sims::Int; new_phi=nothing, num_EV::Int=20)
+function extract_policy(phi::AssembledFeatureBlock,
+                        lambda::AbstractVector{Float64},
+                        actions::Vector{EncounterAction},
+                        num_sims::Int;
+                        new_phi=nothing,
+                        num_EV::Int=20,
+                        state_gen::Function=gen_state, 
+                        ic_batch::Vector{EncounterState}=EncounterState[])
+
     if new_phi == nothing
         new_phi = phi
     end
@@ -274,7 +314,7 @@ function extract_policy(phi::AssembledFeatureBlock, lambda::AbstractVector{Float
     p = LinearQValuePolicy(new_phi, actions, Array(Vector{Float64}, length(actions)))
 
     for i in 1:length(p.actions)
-        p.lambdas[i] = iterate(phi, lambda, [p.actions[i]], num_sims; new_phi=new_phi, num_EV=num_EV)
+        p.lambdas[i] = iterate(phi, lambda, [p.actions[i]], num_sims; new_phi=new_phi, num_EV=num_EV, ic_batch=ic_batch, state_gen=state_gen)
     end
 
     return p

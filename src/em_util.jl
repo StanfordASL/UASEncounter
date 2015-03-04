@@ -44,6 +44,7 @@ function mindist(vo::Float64, psio::Float64, xi::Float64, yi::Float64, xdoti::Fl
         return dist(vo, psio, xi, yi, xdoti, ydoti, tau)
     end
 end
+
 function mindist(state::EncounterState)
     tau = toca(state)
     return dist(state, tau)

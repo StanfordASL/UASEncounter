@@ -3,7 +3,7 @@ module EncounterSimulation
 using EncounterModel
 using EncounterFeatures: AssembledFeatureBlock
 
-export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state
+export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind
 
 abstract EncounterPolicy
 function make_record(policy::EncounterPolicy)
@@ -18,12 +18,15 @@ type LinearQValuePolicy <: EncounterPolicy
     actions::Vector{EncounterAction}
     lambdas::Vector{Vector{Float64}}
 end
-function query_policy(p::LinearQValuePolicy, state::EncounterState)
+function query_policy_ind(p::LinearQValuePolicy, state::EncounterState)
     qs=Array(Float64, length(p.actions))
     for i in 1:length(qs)
         qs[i] = sum(p.phi.features(state)'*p.lambdas[i])
     end
-    return p.actions[indmax(qs)]
+    return indmax(qs)
+end
+function query_policy(p::LinearQValuePolicy, state::EncounterState)
+    return p.actions[query_policy_ind(p,state)]
 end
 
 type LinearQValuePolicyRecord

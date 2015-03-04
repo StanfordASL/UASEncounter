@@ -1,5 +1,3 @@
-
-
 module EncounterFeatures
 
 using EncounterModel: EncounterState, SIM, dist, mindist, toca

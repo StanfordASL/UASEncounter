@@ -46,40 +46,11 @@ import Dates
     NEV = 20
 end
 
-function gen_ic_batch_for_grid(rng, grid)
-    ics = Array(EncounterState, length(grid))
-    for i in 1:length(grid)
-        ix = 1000.0*rand(rng)
-        iy = 2000.0*(rand(rng)-0.5)
-        ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
-        is = [ix, iy, ihead]
-        (dnew,bnew,hnew) = ind2x(grid,i)
-        if dnew <= 0.0
-            dnew+=1e-5
-        end
-        if bnew > pi/2 - 1e-5
-            bnew-=1e-5
-        end
-        if bnew < -pi/2 + 1e-5
-            bnew+=1e-5
-        end
-        os = [is[1]+(dnew+SIM.legal_D)*cos(is[3]+bnew),
-              is[2]+(dnew+SIM.legal_D)*sin(is[3]+bnew),
-              is[3]+hnew]
-        ics[i] = EncounterState(os, is, false)
-        feat = f_focused_intruder_grid(ics[i],grid)
-        if length(find(feat))==0
-            @show (dnew,bnew,hnew)
-        end
-    end
-    return ics
-end
-
 @show phi.description
 @show file_prefix = "nice_trl"
 
 @everywhere const lD = SIM.legal_D
-@everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.1*lD, 1.2*lD, 1.5*lD, 2.0*lD]]
+@everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.1*lD, 1.2*lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
 # @everywhere const ACTIONS = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 rng0 = MersenneTwister(0)
