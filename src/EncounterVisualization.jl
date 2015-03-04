@@ -44,7 +44,7 @@ function plot_value_grid(vals::Array{Float64,2}; extent=(-600.0, 600.0, -100.0, 
     colorbar()
 end
 
-function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship_heading::Float64, n=100)
+function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship_heading::Float64, n=100; threshold=-1.0)
     ymin = -600.0
     ymax = 600.0
     xmin = -100.0
@@ -53,18 +53,36 @@ function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship
     xpoints = linspace(xmin, xmax, n)
     ypoints = linspace(ymin, ymax, n)
     vals = Array(Float64, n, n)
+    any_negligible = false
     for i in 1:n
         for j in 1:n
             state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false)
-            vals[i, j] = query_policy_ind(policy, state)
+            # vals[i,j] = query_policy_ind(policy, state)+1
+            qs=Array(Float64, length(policy.actions))
+            for k in 1:length(qs)
+                qs[k] = sum(policy.phi.features(state)'*policy.lambdas[k])
+            end
+            if maximum(qs) - minimum(qs) <= threshold
+                vals[i,j] = 1
+                any_negligible = true
+            else
+                vals[i,j] = indmax(qs) +1
+            end
+            # vals[i,j] = maximum(qs)-minimum(qs)
         end
     end
+    # @show vals
     clf()
     imshow(vals, origin="lower", extent=extent, interpolation="nearest", cmap=PyPlot.cm["gist_rainbow"])
     xlabel("y (east)")
     ylabel("x (north)")
-    cbar = colorbar(ticks=[1:length(policy.actions)])
-    cbar[:ax][:set_yticklabels]([string(a) for a in policy.actions])
+    # colorbar()
+    cbar = colorbar(ticks=[1:length(policy.actions)+1])
+    if any_negligible
+        cbar[:ax][:set_yticklabels](["Negligible Difference", [string(a) for a in policy.actions]])
+    else
+        cbar[:ax][:set_yticklabels]([string(a) for a in policy.actions])
+    end
     ax=gca()
     idx = 50*cos(is[3])
     idy = 50*sin(is[3])
