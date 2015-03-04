@@ -57,7 +57,7 @@ plot_is = [550.0, -300.0, pi/180.0*135.0]
 plot_heading = 0.0
 @everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
 try
-    for i in 1:3
+    for i in 1:30
         sims_per_policy = 10000
         println("starting policy iteration $i ($sims_per_policy simulations)")
         ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
