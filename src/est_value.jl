@@ -47,36 +47,42 @@ import Dates
 end
 
 @show phi.description
-@show file_prefix = "nice_trl"
+@show file_prefix = "broader_trl"
 
 @everywhere const lD = SIM.legal_D
-@everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
-# @everywhere const ACTIONS = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
+@everywhere const actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
+# @everywhere const actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 rng0 = MersenneTwister(0)
 
-lambda = zeros(phi.length)
+theta = zeros(phi.length)
 plot_is = [550.0, -300.0, pi/180.0*135.0]
 plot_heading = 0.0
 @everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
 try
-    for i in 1:30
-        sims_per_policy = 5000
+    for i in 1:3
+        sims_per_policy = 10000
         println("starting policy iteration $i ($sims_per_policy simulations)")
         ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
-        lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
-        println("max difference: $(norm(lambda_new - lambda, Inf))")
-        println("2-norm difference: $(norm(lambda_new - lambda))")
-        try
-            EncounterVisualization.plot_value_grid(phi, lambda_new, plot_is, plot_heading, 100)
-        catch e
-            println(e)
-        end
-        lambda = lambda_new
+        theta_new = iterate(phi, theta, actions, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
+        println("max difference: $(norm(theta_new - theta, Inf))")
+        println("2-norm difference: $(norm(theta_new - theta))")
+        # try
+        #     EncounterVisualization.plot_value_grid(phi, theta_new, plot_is, plot_heading, 100)
+        # catch e
+        #     println(e)
+        # end
+        theta = theta_new
     end
-    JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)
+    # JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld", "theta", theta, "phi_description", phi.description)
+    JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld",
+             "theta", theta,
+             "phi_description", phi.description,
+             "actions", actions,
+             "intruder_grid", intruder_grid
+             )
 catch e
-    JLD.save("../data/ERROR_$(file_prefix)_value_$(Dates.now()).jld", "lambda", lambda, "phi_description", phi.description)
+    # JLD.save("../data/ERROR_$(file_prefix)_value_$(Dates.now()).jld", "theta", theta, "phi_description", phi.description)
     # run(`sdo false`)
     rethrow(e)
 end
