@@ -5,6 +5,7 @@ import Base.hash
 export EncounterAction, EncounterState, PostDecisionState, SimParams, IntruderParams, OwnshipParams, IntruderState, OwnshipState, HeadingHRL, BankControl
 export SIM, OWNSHIP, INTRUDER
 export dist, mindist, toca, encounter_dynamics, reward, ==, hash
+export heading_hrl
 
 typealias OwnshipState AbstractVector{Float64}
 # x, y, psi

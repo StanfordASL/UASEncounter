@@ -46,6 +46,8 @@ function heading_hrl(state::EncounterState, D_buffered::Float64, osp::OwnshipPar
     maxmindist = maximum(mindists)
     if maxmindist < D
         # @show maxmindist
+        # @show mindists
+        # @show [toca(osp.v, psi, xi, yi, xdoti, ydoti) for psi in psivals]
         maxinds = findin(mindists, maxmindist)
         if length(maxinds)>1
             maxpsis = psivals[maxinds]

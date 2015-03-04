@@ -1,6 +1,3 @@
-
-# @everywhere areload()
-
 @everywhere using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, HeadingHRL, BankControl, ownship_control, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM, OWNSHIP
 # @everywhere using WHack
 @everywhere using EncounterFeatures
