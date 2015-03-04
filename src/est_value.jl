@@ -50,7 +50,7 @@ end
 @show file_prefix = "nice_trl"
 
 @everywhere const lD = SIM.legal_D
-@everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.1*lD, 1.2*lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
+@everywhere const ACTIONS = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
 # @everywhere const ACTIONS = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 rng0 = MersenneTwister(0)
