@@ -19,7 +19,12 @@ end
 
 args=parse_args(ARGS, s)
 
-rm("/tmp/current_val")
+try
+    rm("/tmp/current_val")
+catch(e)
+    println(e)
+    println("continuing anyways...")
+end
 # run(`ln -s $full_filepath /tmp/current_val`)
 symlink(abspath(args["input"]),"/tmp/current_val")
 
