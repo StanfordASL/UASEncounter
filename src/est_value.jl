@@ -44,10 +44,10 @@ import Dates
 end
 
 @show phi.description
-@show file_prefix = "broader_trl"
+@show file_prefix = "trl_end_50k"
 
 @everywhere const lD = SIM.legal_D
-@everywhere const actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
+@everywhere const actions = EncounterAction[HeadingHRL(D) for D in [lD, 2.0*lD, 3.0*lD, 5.0*lD, 10.0*lD]]
 # @everywhere const actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 rng0 = MersenneTwister(0)
@@ -59,19 +59,18 @@ plot_heading = 0.0
 try
     for i in 1:30
         sims_per_policy = 10000
-        println("starting policy iteration $i ($sims_per_policy simulations)")
+        println("starting value iteration $i ($sims_per_policy simulations)")
         ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
         theta_new = iterate(phi, theta, actions, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
-        println("max difference: $(norm(theta_new - theta, Inf))")
-        println("2-norm difference: $(norm(theta_new - theta))")
-        # try
-        #     EncounterVisualization.plot_value_grid(phi, theta_new, plot_is, plot_heading, 100)
-        # catch e
-        #     println(e)
-        # end
         theta = theta_new
     end
-    # JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld", "theta", theta, "phi_description", phi.description)
+
+    sims_per_policy = 50000
+    println("starting final value iteration ($sims_per_policy simulations)")
+    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+    theta_new = iterate(phi, theta, actions, sims_per_policy, rng_seed_offset=0, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
+    theta = theta_new
+
     JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld",
              "theta", theta,
              "phi_description", phi.description,
