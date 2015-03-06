@@ -1,44 +1,26 @@
 module EncounterSimulation
 
 using EncounterModel
-using EncounterFeatures: AssembledFeatureBlock
+using EncounterFeatures: FeatureBlock
 
 export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind
 
 abstract EncounterPolicy
-function make_record(policy::EncounterPolicy)
-    return policy # many policies can probably be stored without needing any manipulation
-end
-function extract_from_record(record::EncounterPolicy)
-    return record
-end
 
 type LinearQValuePolicy <: EncounterPolicy
-    phi::AssembledFeatureBlock
+    phi::FeatureBlock
     actions::Vector{EncounterAction}
     thetas::Vector{Vector{Float64}}
 end
 function query_policy_ind(p::LinearQValuePolicy, state::EncounterState)
     qs=Array(Float64, length(p.actions))
     for i in 1:length(qs)
-        qs[i] = sum(p.phi.features(state)'*p.thetas[i])
+        qs[i] = sum(evaluate(p.phi,state)'*p.thetas[i])
     end
     return indmax(qs)
 end
 function query_policy(p::LinearQValuePolicy, state::EncounterState)
     return p.actions[query_policy_ind(p,state)]
-end
-
-type LinearQValuePolicyRecord
-    phi_desc::Vector{String}
-    actions::Vector{EncounterAction}
-    thetas::Vector{Vector{Float64}}
-end
-function make_record(p::LinearQValuePolicy)
-    return LinearQValuePolicyRecord(p.phi.description, p.actions, p.thetas)
-end
-function extract_from_record(record::LinearQValuePolicyRecord)
-    return LinearQValuePolicy(AssembledFeatureBlock(record.phi_desc), record.actions, record.thetas)
 end
 
 type ConstPolicy <: EncounterPolicy
@@ -75,12 +57,6 @@ type EncounterTestInputRecord # can be saved to disk
 
     policy_record
 end
-function make_record(tid::EncounterTestInputData)
-    return EncounterTestInputRecord(tid.id, tid.ip, tid.op, tid.sim, tid.initial, tid.random_seed, tid.steps, make_record(tid.policy))
-end
-function extract_from_record(r::EncounterTestInputRecord)
-    return EncounterTestInputData(r.id, r.ip, r.op, r.sim, r.initial, r.random_seed, r.steps, extract_from_record(r.policy_record))
-end
 
 type EncounterTestOutputData
     states::Array{Any, 1}
@@ -101,12 +77,6 @@ end
 type EncounterTestRecord
     input_record::EncounterTestInputRecord
     output::EncounterTestOutputData
-end
-function make_record(t::EncounterTest)
-    return EncounterTestRecord(make_record(t.input), t.output)
-end
-function extract_from_record(r::EncounterTestRecord)
-    return EncounterTest(extract_from_record(r.input_record), r.output)
 end
 
 function gen_init_state(rng::AbstractRNG)

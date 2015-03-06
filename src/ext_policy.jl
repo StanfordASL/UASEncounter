@@ -37,7 +37,8 @@ end
 rng0 = MersenneTwister(0)
 ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
 
-phi = AssembledFeatureBlock(data["phi_description"])
+# phi = AssembledFeatureBlock(data["phi_description"])
+phi = data["phi"]
 theta = data["theta"]
 actions = data["actions"]
 

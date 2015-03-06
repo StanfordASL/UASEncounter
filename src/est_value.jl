@@ -3,7 +3,7 @@
 @everywhere using EncounterFeatures
 @everywhere using GridInterpolations
 @everywhere using EncounterValueIteration
-import EncounterVisualization
+# import EncounterVisualization
 import SVDSHack
 import HDF5, JLD
 import Dates
@@ -28,22 +28,22 @@ import Dates
                                 :num_intruder_heading=>12]
 
     features = [
-        f_in_goal,
+        :f_in_goal,
         # f_abs_goal_bearing,
-        f_goal_dist,
-        f_one,
-        ParameterizedFeatureFunction(f_radial_goal_grid, RectangleGrid(goal_dist_points, goal_bearing_points), true),
-        ParameterizedFeatureFunction(f_focused_intruder_grid, intruder_grid, true),
+        :f_goal_dist,
+        :f_one,
+        ParameterizedFeatureFunction(:f_radial_goal_grid, RectangleGrid(goal_dist_points, goal_bearing_points), true),
+        ParameterizedFeatureFunction(:f_focused_intruder_grid, intruder_grid, true),
         # ParameterizedFeatureFunction(f_half_intruder_bin_grid, half_intruder_grid_param, true),
-        f_conflict,
+        :f_conflict,
         # f_intruder_dist,
     ]
     # features = f_radial_intruder_grid
-    phi = assemble(features)
+    phi = FeatureBlock(features)
     NEV = 20
 end
 
-@show phi.description
+# @show phi.description
 @show file_prefix = "trl_end_50k"
 
 @everywhere const lD = SIM.legal_D
@@ -52,7 +52,7 @@ end
 
 rng0 = MersenneTwister(0)
 
-theta = zeros(phi.length)
+theta = zeros(length(phi))
 plot_is = [550.0, -300.0, pi/180.0*135.0]
 plot_heading = 0.0
 @everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
@@ -73,7 +73,7 @@ try
 
     JLD.save("../data/$(file_prefix)_value_$(Dates.now()).jld",
              "theta", theta,
-             "phi_description", phi.description,
+             "phi", phi,
              "actions", actions,
              "intruder_grid", intruder_grid
              )

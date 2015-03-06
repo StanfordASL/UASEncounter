@@ -2,7 +2,7 @@
 module EncounterValueIteration
 
 using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM
-using EncounterFeatures: AssembledFeatureBlock, f_focused_intruder_grid
+using EncounterFeatures: FeatureBlock, f_focused_intruder_grid, evaluate
 using EncounterSimulation: LinearQValuePolicy
 using GridInterpolations
 import SVDSHack
@@ -110,7 +110,7 @@ function gen_ic_batch_for_grid(rng, grid)
 end
 
 
-function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, theta::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
+function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
     has_data = Set{Int64}()
     phis = Any[]
     v = Array(Float64, N)
@@ -136,7 +136,7 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, th
             for l in 1:NEV
                 sp = next_state_from_pd(pd, rng)
                 if !sp.end_state
-                    v_sums[m] += sum(phi.features(sp)'*theta) # sum is just because that's the easiest way to convert to a float
+                    v_sums[m] += sum(evaluate(phi,sp)'*theta) # sum is just because that's the easiest way to convert to a float
                 end
             end
         end
@@ -150,21 +150,22 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, th
 
         v[n] = reward(sn) + maximum(v_sums)/NEV
 
-        feat = new_phi.features(sn)
+        feat = evaluate(new_phi,sn)
         push!(phis, feat)
 
-        if new_phi.dense
-            J = find(feat)        
-        else
-            (J, dummy, dummy2) = findnz(feat)
-        end
+        # if new_phi.dense
+        #     J = find(feat)        
+        # else
+        #     (J, dummy, dummy2) = findnz(feat)
+        # end
+        J = find(feat)        
         union!(has_data, J)
     end
 
     return (phis, has_data, v)
 end
 
-function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
+function iterate{A<:EncounterAction}(phi::FeatureBlock,
                                      theta::AbstractVector{Float64},
                                      actions::Vector{A},
                                      num_sims::Int;
@@ -180,7 +181,7 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     if new_phi==nothing
         new_phi = phi
     end
-    new_theta = Array(Float64, new_phi.length)
+    new_theta = Array(Float64, length(new_phi))
 
     has_data = Set{Int64}()
     phirows = Any[]
@@ -220,46 +221,53 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     println("building matrix...")
     tic()
 
-    if new_phi.dense && !convert_to_sparse
-        println("Phi is dense ($num_sims x $(length(new_theta)))")
-        Phi = Array(Float64, num_sims, length(new_theta))
-        for n in 1:num_sims
-            Phi[n,:] = phirows[n]
-        end
-        # @show rank(Phi)
-    else
-        println("Phi is sparse ($num_sims x $(length(has_data)))")
+    # if new_phi.dense && !convert_to_sparse
+    #     println("Phi is dense ($num_sims x $(length(new_theta)))")
+    #     Phi = Array(Float64, num_sims, length(new_theta))
+    #     for n in 1:num_sims
+    #         Phi[n,:] = phirows[n]
+    #     end
+    #     # @show rank(Phi)
+    # else
+    #     println("Phi is sparse ($num_sims x $(length(has_data)))")
 
-        full_to_small = Array(Int64, length(new_theta))
-        small_to_full = Array(Int64, length(has_data))
-        j = 1
-        for i in 1:length(new_theta)
-            if i in has_data
-                full_to_small[i] = j
-                small_to_full[j] = i
-                j+=1
-            else
-                full_to_small[i] = -1
-            end
-        end
+    #     full_to_small = Array(Int64, length(new_theta))
+    #     small_to_full = Array(Int64, length(has_data))
+    #     j = 1
+    #     for i in 1:length(new_theta)
+    #         if i in has_data
+    #             full_to_small[i] = j
+    #             small_to_full[j] = i
+    #             j+=1
+    #         else
+    #             full_to_small[i] = -1
+    #         end
+    #     end
 
-        Phi = spzeros(num_sims, length(has_data))
+    #     Phi = spzeros(num_sims, length(has_data))
 
-        for i in 1:length(phirows)
-            J = Int[]
-            V = Float64[]
-            if new_phi.dense
-                J = find(phirows[i])
-                V = phirows[i][J]
-            else
-                (J, dummy, V) = findnz(phirows[i])
-            end
-            for k in 1:length(J)
-                @assert(full_to_small[J[k]] > 0)
-                Phi[i,full_to_small[J[k]]] = V[k]
-            end
-        end
+    #     for i in 1:length(phirows)
+    #         J = Int[]
+    #         V = Float64[]
+    #         if new_phi.dense
+    #             J = find(phirows[i])
+    #             V = phirows[i][J]
+    #         else
+    #             (J, dummy, V) = findnz(phirows[i])
+    #         end
+    #         for k in 1:length(J)
+    #             @assert(full_to_small[J[k]] > 0)
+    #             Phi[i,full_to_small[J[k]]] = V[k]
+    #         end
+    #     end
+    # end
+
+    println("Phi is dense ($num_sims x $(length(new_theta)))")
+    Phi = Array(Float64, num_sims, length(new_theta))
+    for n in 1:num_sims
+        Phi[n,:] = phirows[n]
     end
+    # @show rank(Phi)
 
     refs=nothing
     phirows=nothing
@@ -269,36 +277,41 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     println("inverting...")
     tic()
 
-    if new_phi.dense && !convert_to_sparse
-        new_theta = pinv(Phi)*v
-        if length(new_theta) <= 100
-            @show new_theta
-        end
-    else
-        svd = SVDSHack.svds(Phi, nsv = min(length(has_data),200), tol = 0.1)
-        left_sv = svd[1]
-        sval = svd[2]
-        println("singular values: $sval")
-        right_sv = svd[3]
-        sinv = 1 ./ sval
-        tmp = scale(sinv, left_sv')*v
-        theta_est = right_sv*tmp
+    new_theta = pinv(Phi)*v
+    if length(new_theta) <= 100
+        @show new_theta
     end
+
+    # if new_phi.dense && !convert_to_sparse
+    #     new_theta = pinv(Phi)*v
+    #     if length(new_theta) <= 100
+    #         @show new_theta
+    #     end
+    # else
+    #     svd = SVDSHack.svds(Phi, nsv = min(length(has_data),200), tol = 0.1)
+    #     left_sv = svd[1]
+    #     sval = svd[2]
+    #     println("singular values: $sval")
+    #     right_sv = svd[3]
+    #     sinv = 1 ./ sval
+    #     tmp = scale(sinv, left_sv')*v
+    #     theta_est = right_sv*tmp
+    # end
     toc()
 
-    if !new_phi.dense
-        println("filling...")
-        new_theta[small_to_full] = theta_est
-        need_data = setdiff!(Set{Int64}(1:length(new_theta)), has_data)
-        for i in need_data
-            new_theta[i] = theta[i]
-        end
-    end
+    # if !new_phi.dense
+    #     println("filling...")
+    #     new_theta[small_to_full] = theta_est
+    #     need_data = setdiff!(Set{Int64}(1:length(new_theta)), has_data)
+    #     for i in need_data
+    #         new_theta[i] = theta[i]
+    #     end
+    # end
 
     return new_theta
 end
 
-function extract_policy(phi::AssembledFeatureBlock,
+function extract_policy(phi::FeatureBlock,
                         theta::AbstractVector{Float64},
                         actions::Vector{EncounterAction},
                         num_sims::Int;

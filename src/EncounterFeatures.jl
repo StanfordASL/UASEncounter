@@ -6,94 +6,104 @@ using GridInterpolations
 using LegacyFeatures
 import LegacyFeatures.f_radial_goal_grid
 
-import Base.Test.@test
+# import Base.Test.@test
+import Base.length
 
 export ParameterizedFeatureBlock, ParameterizedFeatureFunction
-export assemble, test_module
-export AssembledFeatureBlock
+export evaluate
+export FeatureBlock
 export f_in_goal, f_mindist_time, f_one_over_mindist_time, f_exp_neg_mindist, f_exp_neg_dist, f_one_over_mindist, f_one_over_dist, f_intruder_dist, f_one, f_goal_dist, f_abs_goal_bearing, f_radial_intruder_grid, f_radial_goal_grid, f_exp_neg_goal_dist, f_within_goal_dist, f_conflict, f_focused_intruder_grid, f_half_intruder_bin_grid
 
-abstract FeatureBlock
-function Base.showall(io::IO, block::FeatureBlock)
-    show(io, typeof(block))
-    print(io, '(')
-    for i in 1:length(names(block))
-        print(io, repr(getfield(block, i)))
-        print(io, ',')
+type FeatureBlock
+    members::Vector{Any}
+    uses_mem::Bool
+end
+function FeatureBlock{T}(members::Vector{T})
+    mymem = {}
+    for m in members
+        if isa(m,Symbol)
+            push!(mymem,FeatureFunction(m)) 
+        else
+            push!(mymem,m)
+        end
     end
-    print(io, ')')
+    return FeatureBlock(mymem, any([uses_mem(m) for m in mymem]))
 end
 
+length(b::FeatureBlock) = sum([length(m) for m in b.members])
+uses_mem(b::FeatureBlock) = b.uses_mem
+
 # fun returns a single element vector, there are many param values
-type ParameterizedFeatureBlock <: FeatureBlock
-    fun::Function
+type ParameterizedFeatureBlock
+    fun::Symbol
     params::Vector{Any}
 end
 
+length(b::ParameterizedFeatureBlock) = length(b.params)
+uses_mem(b::ParameterizedFeatureBlock) = false
+
 # fun may return a multi-element vector, there is only one param value
-type ParameterizedFeatureFunction <: FeatureBlock
-    fun::Function
+type ParameterizedFeatureFunction
+    fun::Symbol
     param::Any
-    memory::Bool
-end
-ParameterizedFeatureFunction(fun::Function, param::Any) = ParameterizedFeatureFunction(fun, param, false)
 
-type AssembledFeatureBlock
-    length::Int
-    features::Function
-    dense::Bool
-    memory::Bool
-    # description::Vector{String}
-    description::Vector{ASCIIString}
+    uses_mem::Bool
+    length::Int64
 end
-function AssembledFeatureBlock{T<:String}(features::Function, description::Vector{T}; memory=false)
-    f = features(gen_test_state())
-    # @assert isa(f, AbstractArray{Float64}) 
-    AssembledFeatureBlock(length(f), features, isa(f,Vector{Float64}) || isa(f,Float64), memory, description)
+ParameterizedFeatureFunction(fun::Symbol, param::Any) = ParameterizedFeatureFunction(fun, param, false)
+function ParameterizedFeatureFunction(fun::Symbol, param::Any, memory::Bool)
+    ret = eval(fun)(gen_test_state(), param)
+    return ParameterizedFeatureFunction(fun, param, memory, length(ret))
 end
-function AssembledFeatureBlock{T<:String}(description::Vector{T})
-    blocks = Any[]
-    for d in description
-        push!(blocks, eval(parse(d)))
+
+length(b::ParameterizedFeatureFunction) = b.length
+uses_mem(b::ParameterizedFeatureFunction) = b.uses_mem
+
+type FeatureFunction
+    fun::Symbol
+end
+uses_mem(f::FeatureFunction) = false
+length(f::FeatureFunction) = 1
+
+function evaluate(block::ParameterizedFeatureBlock, state::EncounterState)
+    b = Array(Float64, length(block.params))
+    fun = eval(block.fun)
+    for i in 1:length(block.params)
+        b[i:i] = fun(state, block.params[i])
     end
-    return assemble(blocks)
+    return b
 end
 
-function assemble(fun::Function)
-    return AssembledFeatureBlock(fun, [repr(fun)])
+function evaluate(f::ParameterizedFeatureFunction, state::EncounterState; memory::AbstractVector{Float64}=Float64[]) 
+    return eval(f.fun)(state, f.param, memory=memory)
 end
 
-function assemble(block::ParameterizedFeatureBlock)
-    fun(state) = call_with_params(block.fun, block.params, state)
-    return AssembledFeatureBlock(fun, [repr(block)])
+function evaluate(f::FeatureFunction, state::EncounterState)
+    return eval(f.fun)(state)
 end
 
-function assemble(block::ParameterizedFeatureFunction)
-    if block.memory
-        fun(state; memory=Float64[]) = block.fun(state, block.param, memory=memory)
-    else
-        fun(state) = block.fun(state, block.param)
+function evaluate(block::FeatureBlock, state::EncounterState; memory::AbstractVector{Float64}=Float64[])
+    b = memory
+    if length(memory)==0
+        b = zeros(Float64, length(block))
+        # b = Array(Float64, sum([a.length for a in blocks]))
+    # elseif length(memory)==0
+    #     b = spzeros(sum([a.length for a in blocks]),1)
     end
-    return AssembledFeatureBlock(fun, [repr(block)], memory=block.memory)
-end
-
-function assemble(block::AssembledFeatureBlock)
-    return block
-end
-
-function assemble{T}(blocks::Vector{T})
-    length = 0
-    assembled = AssembledFeatureBlock[]
-    descriptions = String[]
-    for i in 1:size(blocks)[1]
-        b = assemble(blocks[i])
-        length += b.length
-        append!(descriptions, b.description)
-        push!(assembled, b)
+    i = 1
+    for a in block.members
+        if uses_mem(a)
+            evaluate(a, state, memory=sub(b, i:i-1+length(a)))
+        else
+            b[i:i-1+length(a)] = evaluate(a, state)
+        end
+        i+=length(a)
     end
-    dense = all([a.dense for a in assembled])
-    needs_memory = any([a.memory for a in assembled])
-    return AssembledFeatureBlock(length, s -> call_all(assembled, s), dense, needs_memory, descriptions)
+    return b
+end
+
+function gen_test_state()
+    return EncounterState([0.,0.,0.], [0.,0.,0.],true)
 end
 
 function f_focused_intruder_grid(state, grid::AbstractGrid; memory::AbstractVector{Float64}=Float64[])
@@ -265,51 +275,20 @@ function f_one(state::EncounterState)
     return convert(Float64, !state.end_state)
 end
 
-function call_with_params(fun::Function, params::Vector{Any}, state::EncounterState)
-    b = Array(Float64, length(params))
-    for i in 1:length(params)
-        b[i:i] = fun(state, params[i])
-    end
-    return b
-end
-
-function call_all(blocks::Vector{AssembledFeatureBlock}, state::EncounterState; memory::AbstractVector{Float64}=Float64[])
-    b = memory
-    if length(memory)==0 && all([a.dense for a in blocks])
-        b = zeros(Float64, sum([a.length for a in blocks]))
-        # b = Array(Float64, sum([a.length for a in blocks]))
-    elseif length(memory)==0
-        b = spzeros(sum([a.length for a in blocks]),1)
-    end
-    i = 1
-    for a in blocks
-        if a.memory
-            a.features(state, memory=sub(b, i:i-1+a.length))
-        else
-            b[i:i-1+a.length] = a.features(state)
-        end
-        i+=a.length
-    end
-    return b
-end
-
-function gen_test_state()
-    return EncounterState([0.,0.,0.], [0.,0.,0.],true)
-end
 
 # function kaelbling_intruder(state)
 #     return [dist(state), 1.0/dist(state), 
 # end
 
 
-function return_param(p,s) p end
-
-function test_module()
-    p = ParameterizedFeatureBlock([1,2], return_param)
-    b = assemble(p)
-    @test b.features(nothing) == [1,2]
-    b2 = AssembledFeatureBlock(b.description)
-    @test b2.features(nothing) == [1,2]
-end
+# function return_param(p,s) p end
+# 
+# function test_module()
+#     p = ParameterizedFeatureBlock([1,2], return_param)
+#     b = assemble(p)
+#     @test b.features(nothing) == [1,2]
+#     b2 = AssembledFeatureBlock(b.description)
+#     @test b2.features(nothing) == [1,2]
+# end
 
 end

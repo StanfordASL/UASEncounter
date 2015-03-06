@@ -17,7 +17,8 @@ println("using file $(parsed_args["filename"])")
 
 data = JLD.load(parsed_args["filename"])
 
-phi = AssembledFeatureBlock(data["phi_description"])
+# phi = AssembledFeatureBlock(data["phi_description"])
+phi = data["phi"]
 
 oad = 0.0
 iad = 135.0

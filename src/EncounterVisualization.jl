@@ -3,13 +3,13 @@ module EncounterVisualization
 # import Gadfly
 using PyPlot
 using EncounterModel: IntruderState, EncounterState
-using EncounterFeatures: AssembledFeatureBlock
+using EncounterFeatures: FeatureBlock
 using EncounterSimulation
 # using PGFPlots
 
 export plot_value_grid
 
-function plot_value_grid(phi::AssembledFeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100)
+function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100)
     ymin = -600.0
     ymax = 600.0
     xmin = -100.0
@@ -20,7 +20,7 @@ function plot_value_grid(phi::AssembledFeatureBlock, theta::Vector{Float64}, is:
     for i in 1:n
         for j in 1:n
             state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false)
-            vals[i, j] = sum(phi.features(state)'*theta)
+            vals[i, j] = sum(evaluate(phi,state)'*theta)
         end
     end
     plot_value_grid(vals, extent=(ymin, ymax, xmin, xmax))
@@ -60,7 +60,7 @@ function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship
             # vals[i,j] = query_policy_ind(policy, state)+1
             qs=Array(Float64, length(policy.actions))
             for k in 1:length(qs)
-                qs[k] = sum(policy.phi.features(state)'*policy.thetas[k])
+                qs[k] = sum(evaluate(policy.phi, state)'*policy.thetas[k])
             end
             if maximum(qs) - minimum(qs) <= threshold
                 vals[i,j] = 1

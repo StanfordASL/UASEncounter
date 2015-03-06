@@ -20,17 +20,17 @@ import ProfileView
     intruder_heading_points = linspace(0.0, 2*pi, 12)
 
     features = [
-        f_in_goal,
+        :f_in_goal,
         # f_abs_goal_bearing,
-        f_goal_dist,
-        f_one,
-        ParameterizedFeatureFunction(f_radial_goal_grid, SimplexGrid(goal_dist_points, goal_bearing_points)),
-        ParameterizedFeatureFunction(f_focused_intruder_grid, SimplexGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points)),
-        f_conflict,
+        :f_goal_dist,
+        :f_one,
+        ParameterizedFeatureFunction(:f_radial_goal_grid, SimplexGrid(goal_dist_points, goal_bearing_points)),
+        ParameterizedFeatureFunction(:f_focused_intruder_grid, SimplexGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points)),
+        :f_conflict,
         # f_intruder_dist,
     ]
     # features = f_radial_intruder_grid
-    phi = assemble(features)
+    phi = FeatureBlock(features)
     NEV = 20
 end
 
