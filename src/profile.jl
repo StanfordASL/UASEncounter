@@ -40,16 +40,16 @@ rng0 = MersenneTwister(0)
 @everywhere const ACTIONS = [HeadingHRL(D) for D in [lD, 1.1*lD, 1.2*lD, 1.5*lD, 2.0*lD]]
 
 sims_per_policy = 1000
-lambda = zeros(phi.length)
-lambda_new = iterate(phi, lambda, ACTIONS, 1000, convert_to_sparse=true)
+theta = zeros(phi.length)
+theta_new = iterate(phi, theta, ACTIONS, 1000, convert_to_sparse=true)
 Profile.clear()
 
 @profile for i in 1:1
     println("starting policy iteration $i ($sims_per_policy simulations)")
-    lambda_new = iterate(phi, lambda, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, convert_to_sparse=true)
-    println("max difference: $(norm(lambda_new - lambda, Inf))")
-    println("2-norm difference: $(norm(lambda_new - lambda))")
-    lambda = lambda_new
+    theta_new = iterate(phi, theta, ACTIONS, sims_per_policy, rng_seed_offset=i*1120000+1, convert_to_sparse=true)
+    println("max difference: $(norm(theta_new - theta, Inf))")
+    println("2-norm difference: $(norm(theta_new - theta))")
+    theta = theta_new
 end
 
 ProfileView.view()

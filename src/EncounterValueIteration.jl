@@ -110,7 +110,7 @@ function gen_ic_batch_for_grid(rng, grid)
 end
 
 
-function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, lambda::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
+function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, theta::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
     has_data = Set{Int64}()
     phis = Any[]
     v = Array(Float64, N)
@@ -136,7 +136,7 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, la
             for l in 1:NEV
                 sp = next_state_from_pd(pd, rng)
                 if !sp.end_state
-                    v_sums[m] += sum(phi.features(sp)'*lambda) # sum is just because that's the easiest way to convert to a float
+                    v_sums[m] += sum(phi.features(sp)'*theta) # sum is just because that's the easiest way to convert to a float
                 end
             end
         end
@@ -165,7 +165,7 @@ function run_sims(new_phi::AssembledFeatureBlock, phi::AssembledFeatureBlock, la
 end
 
 function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
-                                     lambda::AbstractVector{Float64},
+                                     theta::AbstractVector{Float64},
                                      actions::Vector{A},
                                      num_sims::Int;
                                      new_phi=nothing,
@@ -180,7 +180,7 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     if new_phi==nothing
         new_phi = phi
     end
-    new_lambda = Array(Float64, new_phi.length)
+    new_theta = Array(Float64, new_phi.length)
 
     has_data = Set{Int64}()
     phirows = Any[]
@@ -191,9 +191,9 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     for i in 1:int(num_sims/sims_per_spawn)
         ic_batch_part=ic_batch[(i-1)*sims_per_spawn+1:min(i*sims_per_spawn,length(ic_batch))]
         if parallel
-            push!(refs, @spawn run_sims(new_phi, phi, lambda, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
+            push!(refs, @spawn run_sims(new_phi, phi, theta, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
         else
-            push!(refs, run_sims(new_phi, phi, lambda, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
+            push!(refs, run_sims(new_phi, phi, theta, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
             println("Finished batch $i")
         end
     end
@@ -221,8 +221,8 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     tic()
 
     if new_phi.dense && !convert_to_sparse
-        println("Phi is dense ($num_sims x $(length(new_lambda)))")
-        Phi = Array(Float64, num_sims, length(new_lambda))
+        println("Phi is dense ($num_sims x $(length(new_theta)))")
+        Phi = Array(Float64, num_sims, length(new_theta))
         for n in 1:num_sims
             Phi[n,:] = phirows[n]
         end
@@ -230,10 +230,10 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     else
         println("Phi is sparse ($num_sims x $(length(has_data)))")
 
-        full_to_small = Array(Int64, length(new_lambda))
+        full_to_small = Array(Int64, length(new_theta))
         small_to_full = Array(Int64, length(has_data))
         j = 1
-        for i in 1:length(new_lambda)
+        for i in 1:length(new_theta)
             if i in has_data
                 full_to_small[i] = j
                 small_to_full[j] = i
@@ -270,9 +270,9 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
     tic()
 
     if new_phi.dense && !convert_to_sparse
-        new_lambda = pinv(Phi)*v
-        if length(new_lambda) <= 100
-            @show new_lambda
+        new_theta = pinv(Phi)*v
+        if length(new_theta) <= 100
+            @show new_theta
         end
     else
         svd = SVDSHack.svds(Phi, nsv = min(length(has_data),200), tol = 0.1)
@@ -282,24 +282,24 @@ function iterate{A<:EncounterAction}(phi::AssembledFeatureBlock,
         right_sv = svd[3]
         sinv = 1 ./ sval
         tmp = scale(sinv, left_sv')*v
-        lambda_est = right_sv*tmp
+        theta_est = right_sv*tmp
     end
     toc()
 
     if !new_phi.dense
         println("filling...")
-        new_lambda[small_to_full] = lambda_est
-        need_data = setdiff!(Set{Int64}(1:length(new_lambda)), has_data)
+        new_theta[small_to_full] = theta_est
+        need_data = setdiff!(Set{Int64}(1:length(new_theta)), has_data)
         for i in need_data
-            new_lambda[i] = lambda[i]
+            new_theta[i] = theta[i]
         end
     end
 
-    return new_lambda
+    return new_theta
 end
 
 function extract_policy(phi::AssembledFeatureBlock,
-                        lambda::AbstractVector{Float64},
+                        theta::AbstractVector{Float64},
                         actions::Vector{EncounterAction},
                         num_sims::Int;
                         new_phi=nothing,
@@ -314,7 +314,7 @@ function extract_policy(phi::AssembledFeatureBlock,
     p = LinearQValuePolicy(new_phi, actions, Array(Vector{Float64}, length(actions)))
 
     for i in 1:length(p.actions)
-        p.lambdas[i] = iterate(phi, lambda, [p.actions[i]], num_sims; new_phi=new_phi, num_EV=num_EV, ic_batch=ic_batch, state_gen=state_gen)
+        p.thetas[i] = iterate(phi, theta, [p.actions[i]], num_sims; new_phi=new_phi, num_EV=num_EV, ic_batch=ic_batch, state_gen=state_gen)
     end
 
     return p

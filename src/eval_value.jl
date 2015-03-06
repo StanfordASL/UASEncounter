@@ -62,12 +62,12 @@ try
         end
     end
 
-    lambda = pinv(phi)*vec(vals')
+    theta = pinv(phi)*vec(vals')
 
     gridvals = Array(Float64, size(vals))
     for i in 1:n
         for j in 1:n
-            gridvals[i, j] = interpolate(grid, lambda, [xpoints[i], ypoints[j]])
+            gridvals[i, j] = interpolate(grid, theta, [xpoints[i], ypoints[j]])
         end
     end
 

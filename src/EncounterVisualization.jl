@@ -60,7 +60,7 @@ function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship
             # vals[i,j] = query_policy_ind(policy, state)+1
             qs=Array(Float64, length(policy.actions))
             for k in 1:length(qs)
-                qs[k] = sum(policy.phi.features(state)'*policy.lambdas[k])
+                qs[k] = sum(policy.phi.features(state)'*policy.thetas[k])
             end
             if maximum(qs) - minimum(qs) <= threshold
                 vals[i,j] = 1

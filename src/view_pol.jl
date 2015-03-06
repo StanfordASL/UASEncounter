@@ -42,7 +42,7 @@ EncounterVisualization.plot_policy_grid(policy,
 if args["vals"]
     for a in 1:length(policy.actions)
         PyPlot.figure(a+1)
-        EncounterVisualization.plot_value_grid(policy.phi, policy.lambdas[a], [ix, iy, pi/180.0*iad], pi/180.0*oad)
+        EncounterVisualization.plot_value_grid(policy.phi, policy.thetas[a], [ix, iy, pi/180.0*iad], pi/180.0*oad)
         PyPlot.title(string(policy.actions[a]))
     end
 end

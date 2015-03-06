@@ -16,12 +16,12 @@ end
 type LinearQValuePolicy <: EncounterPolicy
     phi::AssembledFeatureBlock
     actions::Vector{EncounterAction}
-    lambdas::Vector{Vector{Float64}}
+    thetas::Vector{Vector{Float64}}
 end
 function query_policy_ind(p::LinearQValuePolicy, state::EncounterState)
     qs=Array(Float64, length(p.actions))
     for i in 1:length(qs)
-        qs[i] = sum(p.phi.features(state)'*p.lambdas[i])
+        qs[i] = sum(p.phi.features(state)'*p.thetas[i])
     end
     return indmax(qs)
 end
@@ -32,13 +32,13 @@ end
 type LinearQValuePolicyRecord
     phi_desc::Vector{String}
     actions::Vector{EncounterAction}
-    lambdas::Vector{Vector{Float64}}
+    thetas::Vector{Vector{Float64}}
 end
 function make_record(p::LinearQValuePolicy)
-    return LinearQValuePolicyRecord(p.phi.description, p.actions, p.lambdas)
+    return LinearQValuePolicyRecord(p.phi.description, p.actions, p.thetas)
 end
 function extract_from_record(record::LinearQValuePolicyRecord)
-    return LinearQValuePolicy(AssembledFeatureBlock(record.phi_desc), record.actions, record.lambdas)
+    return LinearQValuePolicy(AssembledFeatureBlock(record.phi_desc), record.actions, record.thetas)
 end
 
 type ConstPolicy <: EncounterPolicy

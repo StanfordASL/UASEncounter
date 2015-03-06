@@ -2,9 +2,9 @@ Wed 04 Mar 2015 01:14:57 PM PST
     probably time to just go ahead and switch reward functions
     policy weirdness: 50k helps - make sure to run 50k on last value iteration
     do this now
-    [ ] Do first two problems of homework
+    [X] Do first two problems of homework
     [ ] Major Refactoring - tonight
-        [ ] lambda -> theta everywhere
+        [X] lambda -> theta everywhere
         [ ] refactor features [test speed!]
         [ ] augment state
         [ ] refactor reward function
@@ -27,7 +27,6 @@ Tue 03 Mar 2015 03:37:19 PM PST
         [ ] Arrows
     [ ] Plot policy only where it matters
 [X] Rerun simulations with more actions
-
 
 Mon 02 Mar 2015 11:19:16 PM PST
 comparing pinv with l_bfgs

@@ -24,7 +24,7 @@ iad = 135.0
 ix = 600.0
 iy = -250.0
 EncounterVisualization.plot_value_grid(phi,
-                                       data["lambda"],
+                                       data["theta"],
                                        [ix, iy, pi/180.0*iad],
                                        pi/180.0*oad,
                                        100)
