@@ -178,24 +178,24 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     theta = zeros(length(phi))
     snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
 
-    # for i in 1:30
-    #     tic()
-    #     sims_per_policy = 10000
-    #     # println("starting value iteration $i ($sims_per_policy simulations)")
-    #     ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
-    #     theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
-    #                         rng_seed_offset=i,
-    #                         state_gen=snap_generator,
-    #                         parallel=true,
-    #                         ic_batch=ic_batch,
-    #                         output_prefix="\r[$i ($sims_per_policy)]",
-    #                         output_suffix="")
-    #     theta = theta_new
-    #     toc()
-    # end
+    for i in 1:30
+        tic()
+        sims_per_policy = 10000
+        # println("starting value iteration $i ($sims_per_policy simulations)")
+        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+        theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
+                            rng_seed_offset=i,
+                            state_gen=snap_generator,
+                            parallel=true,
+                            ic_batch=ic_batch,
+                            output_prefix="\r[$i ($sims_per_policy)]",
+                            output_suffix="")
+        theta = theta_new
+        toc()
+    end
 
     tic()
-    sims_per_policy = 10000
+    sims_per_policy = 50000
     # println("starting final value iteration ($sims_per_policy simulations)")
     ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
     theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
@@ -209,7 +209,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     toc()
 
     ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
-    return extract_policy(phi, theta, rm, actions, 10000,
+    return extract_policy(phi, theta, rm, actions, 50000,
                             ic_batch=ic_batch,
                             state_gen=snap_generator)
 end

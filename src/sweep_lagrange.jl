@@ -74,8 +74,8 @@ avg_delays = Array(Float64, length(lambdas))
 
 baseline_completion_time = 61
 
-i = 1
-# for i in 1:length(lambdas)
+# i = 1
+for i in 1:length(lambdas)
     tic()
     lambda = lambdas[i]
     rm = DeviationAndTimeReward(100, 1, 100, lambda)
@@ -99,6 +99,6 @@ i = 1
     @show avg_delays[i] 
     risk_ratios[i] = risk_ratio
     toc()
-# end
+end
 
 JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time
