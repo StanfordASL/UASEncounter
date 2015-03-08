@@ -40,7 +40,7 @@ function heading_hrl(state::EncounterState, D_buffered::Float64, osp::OwnshipPar
     # return desiredpsi
     
     # psivals = 0:pi/50:2*pi
-    psivals = currpsi-pi/2:pi/20:currpsi+pi/2
+    psivals = currpsi-pi/2:pi/40:currpsi+pi/2
     mindists = [mindist(osp.v, psi, xi, yi, xdoti, ydoti) for psi in psivals]
 
     maxmindist = maximum(mindists)

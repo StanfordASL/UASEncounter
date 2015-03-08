@@ -7,14 +7,15 @@ using EncounterModel
 using EncounterSimulation
 @everywhere using GridInterpolations
 using ArgParse
+import Dates
 
 s = ArgParseSettings()
 
 @add_arg_table s begin
     "input"
-        required = true
-    "output"
-        required = true
+        default = "../data/current.value"
+    "--output", "-o"
+        default = "../data/$(Dates.format(Dates.now(),"u-d_HHMM")).policy"
 end
 
 args=parse_args(ARGS, s)
@@ -41,16 +42,28 @@ ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
 phi = data["phi"]
 theta = data["theta"]
 actions = data["actions"]
+rm = data["rm"]
 
 policy = extract_policy(phi,
                         theta,
+                        rm,
                         actions,
                         50000,
                         ic_batch=ic_batch,
                         state_gen=snap_generator)
 
+filename = string(args["output"])
+JLD.save(filename, "policy", make_record(policy))
 
-JLD.save(string(args["output"]), "policy", make_record(policy))
+try
+    rm("../data/current.policy")
+catch e
+    println(e)
+    println("continuing anyways...")
+end
+
+symlink(filename, "../data/current.policy")
+
 
 # XXX HACK HACK HACK
 # @everywhere begin

@@ -1,13 +1,13 @@
 
 module EncounterValueIteration
 
-using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM
+using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, RewardModel, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM
 using EncounterFeatures: FeatureBlock, f_focused_intruder_grid, evaluate
 using EncounterSimulation: LinearQValuePolicy
 using GridInterpolations
 import SVDSHack
 
-export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid
+export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid, find_policy
 
 function gen_state(rng::AbstractRNG)
     ix = 1000.0*rand(rng)
@@ -21,7 +21,9 @@ function gen_state(rng::AbstractRNG)
     oy = 1000.0*(rand(rng)-0.5)
     ohead = 2*pi*rand(rng) 
 
-    return EncounterState([ox,oy,ohead],[ix, iy, ihead],false)
+    has_deviated = rand(rng) >= 0.5
+
+    return EncounterState([ox,oy,ohead],[ix, iy, ihead],false,has_deviated)
 end
 
 # HACK
@@ -109,8 +111,7 @@ function gen_ic_batch_for_grid(rng, grid)
     return ics
 end
 
-
-function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVector{Float64}, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
+function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVector{Float64}, rm::RewardModel, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
     has_data = Set{Int64}()
     phis = Any[]
     v = Array(Float64, N)
@@ -128,10 +129,12 @@ function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVecto
         end
 
         v_sums = zeros(length(actions))
+        rewards = zeros(length(actions))
 
         for m in 1:length(actions)
             a = actions[m]
             pd = post_decision_state(sn, a)
+            rewards[m] = reward(rm, sn, a)
 
             for l in 1:NEV
                 sp = next_state_from_pd(pd, rng)
@@ -148,7 +151,7 @@ function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVecto
         #     gc_disable()
         # end
 
-        v[n] = reward(sn) + maximum(v_sums)/NEV
+        v[n] = maximum(rewards + v_sums/NEV)
 
         feat = evaluate(new_phi,sn)
         push!(phis, feat)
@@ -165,8 +168,55 @@ function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVecto
     return (phis, has_data, v)
 end
 
+function find_policy{A<:EncounterAction}(phi::FeatureBlock,
+                     rm::RewardModel,
+                     actions::Vector{A},
+                     intruder_grid::AbstractGrid)
+
+    rng0 = MersenneTwister(0)
+
+    theta = zeros(length(phi))
+    snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
+
+    for i in 1:30
+        tic()
+        sims_per_policy = 10000
+        # println("starting value iteration $i ($sims_per_policy simulations)")
+        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+        theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
+                            rng_seed_offset=i,
+                            state_gen=snap_generator,
+                            parallel=true,
+                            ic_batch=ic_batch,
+                            output_prefix="\r[$i ($sims_per_policy)]",
+                            output_suffix="")
+        theta = theta_new
+        toc()
+    end
+
+    tic()
+    sims_per_policy = 50000
+    # println("starting final value iteration ($sims_per_policy simulations)")
+    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+    theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
+                        rng_seed_offset=2011,
+                        state_gen=snap_generator,
+                        parallel=true,
+                        ic_batch=ic_batch,
+                        output_prefix="\r[final ($sims_per_policy)]",
+                        output_suffix="")
+    theta = theta_new
+    toc()
+
+    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+    return extract_policy(phi, theta, rm, actions, 50000,
+                            ic_batch=ic_batch,
+                            state_gen=snap_generator)
+end
+
 function iterate{A<:EncounterAction}(phi::FeatureBlock,
                                      theta::AbstractVector{Float64},
+                                     rm::RewardModel,
                                      actions::Vector{A},
                                      num_sims::Int;
                                      new_phi=nothing,
@@ -176,7 +226,9 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
                                      convert_to_sparse=false,
                                      parallel=true,
                                      state_gen::Function=gen_state,
-                                     ic_batch::Vector{EncounterState}=EncounterState[])
+                                     ic_batch::Vector{EncounterState}=EncounterState[],
+                                     output_prefix="",
+                                     output_suffix="\n")
 
     if new_phi==nothing
         new_phi = phi
@@ -187,21 +239,21 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     phirows = Any[]
     v = Float64[]
 
-    println("spawning simulations...")
+    print("$output_prefix spawning simulations... $output_suffix")
     refs = Any[]
     for i in 1:int(num_sims/sims_per_spawn)
         ic_batch_part=ic_batch[(i-1)*sims_per_spawn+1:min(i*sims_per_spawn,length(ic_batch))]
         if parallel
-            push!(refs, @spawn run_sims(new_phi, phi, theta, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
+            push!(refs, @spawn run_sims(new_phi, phi, theta, rm, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
         else
-            push!(refs, run_sims(new_phi, phi, theta, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
-            println("Finished batch $i")
+            push!(refs, run_sims(new_phi, phi, theta, rm, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
+            # println("Finished batch $i")
         end
     end
 
-    println("waiting for sims to finish and aggregating simulation data...")
+    print("$output_prefix waiting for sims to finish and aggregating simulation data... $output_suffix")
 
-    tic()
+    # tic()
     num_fetched = 0
     for ref in refs
         (local_phis, local_has_data, local_v) = fetch(ref)
@@ -209,60 +261,19 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
         append!(v, local_v)
         union!(has_data, local_has_data)
         num_fetched += sims_per_spawn
-        print("\rfetched $num_fetched simulation results")
+        print("\r$output_prefix fetched $num_fetched sims.")
     end
-    print("\n")
-    toc()
+    # print("\n")
+    # toc()
 
-    println("done with simulations.")
+    print("$output_prefix done with sims. $output_suffix")
 
     @everywhere gc()
 
-    println("building matrix...")
-    tic()
+    print("$output_prefix building matrix... $output_suffix")
+    # tic()
 
-    # if new_phi.dense && !convert_to_sparse
-    #     println("Phi is dense ($num_sims x $(length(new_theta)))")
-    #     Phi = Array(Float64, num_sims, length(new_theta))
-    #     for n in 1:num_sims
-    #         Phi[n,:] = phirows[n]
-    #     end
-    #     # @show rank(Phi)
-    # else
-    #     println("Phi is sparse ($num_sims x $(length(has_data)))")
-
-    #     full_to_small = Array(Int64, length(new_theta))
-    #     small_to_full = Array(Int64, length(has_data))
-    #     j = 1
-    #     for i in 1:length(new_theta)
-    #         if i in has_data
-    #             full_to_small[i] = j
-    #             small_to_full[j] = i
-    #             j+=1
-    #         else
-    #             full_to_small[i] = -1
-    #         end
-    #     end
-
-    #     Phi = spzeros(num_sims, length(has_data))
-
-    #     for i in 1:length(phirows)
-    #         J = Int[]
-    #         V = Float64[]
-    #         if new_phi.dense
-    #             J = find(phirows[i])
-    #             V = phirows[i][J]
-    #         else
-    #             (J, dummy, V) = findnz(phirows[i])
-    #         end
-    #         for k in 1:length(J)
-    #             @assert(full_to_small[J[k]] > 0)
-    #             Phi[i,full_to_small[J[k]]] = V[k]
-    #         end
-    #     end
-    # end
-
-    println("Phi is dense ($num_sims x $(length(new_theta)))")
+    print("$output_prefix Phi is dense ($num_sims x $(length(new_theta))) $output_suffix")
     Phi = Array(Float64, num_sims, length(new_theta))
     for n in 1:num_sims
         Phi[n,:] = phirows[n]
@@ -272,47 +283,23 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     refs=nothing
     phirows=nothing
     @everywhere gc()
-    toc()
+    # toc()
 
-    println("inverting...")
-    tic()
+    print("$output_prefix inverting... $output_suffix")
+    # tic()
 
     new_theta = pinv(Phi)*v
     if length(new_theta) <= 100
         @show new_theta
     end
-
-    # if new_phi.dense && !convert_to_sparse
-    #     new_theta = pinv(Phi)*v
-    #     if length(new_theta) <= 100
-    #         @show new_theta
-    #     end
-    # else
-    #     svd = SVDSHack.svds(Phi, nsv = min(length(has_data),200), tol = 0.1)
-    #     left_sv = svd[1]
-    #     sval = svd[2]
-    #     println("singular values: $sval")
-    #     right_sv = svd[3]
-    #     sinv = 1 ./ sval
-    #     tmp = scale(sinv, left_sv')*v
-    #     theta_est = right_sv*tmp
-    # end
-    toc()
-
-    # if !new_phi.dense
-    #     println("filling...")
-    #     new_theta[small_to_full] = theta_est
-    #     need_data = setdiff!(Set{Int64}(1:length(new_theta)), has_data)
-    #     for i in need_data
-    #         new_theta[i] = theta[i]
-    #     end
-    # end
+    # toc()
 
     return new_theta
 end
 
 function extract_policy(phi::FeatureBlock,
                         theta::AbstractVector{Float64},
+                        rm::RewardModel,
                         actions::Vector{EncounterAction},
                         num_sims::Int;
                         new_phi=nothing,
@@ -327,10 +314,17 @@ function extract_policy(phi::FeatureBlock,
     p = LinearQValuePolicy(new_phi, actions, Array(Vector{Float64}, length(actions)))
 
     for i in 1:length(p.actions)
-        p.thetas[i] = iterate(phi, theta, [p.actions[i]], num_sims; new_phi=new_phi, num_EV=num_EV, ic_batch=ic_batch, state_gen=state_gen)
+        p.thetas[i] = iterate(phi, theta, rm, [p.actions[i]], num_sims,
+                              new_phi=new_phi,
+                              num_EV=num_EV,
+                              ic_batch=ic_batch,
+                              state_gen=state_gen,
+                              output_prefix="\r[$(p.actions[i]) ($num_sims)]",
+                              output_suffix="")
     end
 
     return p
 end
+
 
 end

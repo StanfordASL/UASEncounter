@@ -2,8 +2,8 @@ module EncounterModel
 
 import Base.hash
 
-export EncounterAction, EncounterState, PostDecisionState, SimParams, IntruderParams, OwnshipParams, IntruderState, OwnshipState, HeadingHRL, BankControl
-export SIM, OWNSHIP, INTRUDER
+export EncounterAction, EncounterState, PostDecisionState, SimParams, IntruderParams, OwnshipParams, IntruderState, OwnshipState, HeadingHRL, BankControl, RewardModel, DeviationAndTimeReward
+export SIM, OWNSHIP, INTRUDER, REWARD
 export dist, mindist, toca, encounter_dynamics, reward, ==, hash
 export heading_hrl
 
@@ -19,7 +19,9 @@ type EncounterState
     os::OwnshipState
     is::IntruderState
     end_state::Bool
+    has_deviated::Bool
 end
+EncounterState(os::OwnshipState, is::IntruderState, end_state::Bool) = EncounterState(os, is, end_state, false)
 typealias PostDecisionState EncounterState
 
 type HeadingHRL <: EncounterAction
@@ -58,6 +60,17 @@ const OWNSHIP = OwnshipParams(30.0, 45.0/180.0*pi, 3.0)
 # const INTRUDER = IntruderParams(60.0, 5.0/180.0*pi)
 const INTRUDER = IntruderParams(60.0, 15.0/180.0*pi)
 
+abstract RewardModel
+
+type DeviationAndTimeReward <: RewardModel
+    deviation_cost::Float64
+    step_cost::Float64
+    goal_reward::Float64
+    nmac_lambda::Float64
+end
+
+REWARD = DeviationAndTimeReward(100,1,100,1000)
+
 # utility functions like dist, toca, etc
 include("em_util.jl")
 
@@ -66,6 +79,9 @@ include("em_hrl.jl")
 
 # dynamics functions
 include("em_dynamics.jl")
+
+# reward functions
+include("em_reward.jl")
 
 # function hash(a::HeadingHRL)
 #     return hash(a.D_buffered)

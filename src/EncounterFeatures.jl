@@ -12,7 +12,7 @@ import Base.length
 export ParameterizedFeatureBlock, ParameterizedFeatureFunction
 export evaluate
 export FeatureBlock
-export f_in_goal, f_mindist_time, f_one_over_mindist_time, f_exp_neg_mindist, f_exp_neg_dist, f_one_over_mindist, f_one_over_dist, f_intruder_dist, f_one, f_goal_dist, f_abs_goal_bearing, f_radial_intruder_grid, f_radial_goal_grid, f_exp_neg_goal_dist, f_within_goal_dist, f_conflict, f_focused_intruder_grid, f_half_intruder_bin_grid
+export f_in_goal, f_mindist_time, f_one_over_mindist_time, f_exp_neg_mindist, f_exp_neg_dist, f_one_over_mindist, f_one_over_dist, f_intruder_dist, f_one, f_goal_dist, f_abs_goal_bearing, f_radial_intruder_grid, f_radial_goal_grid, f_exp_neg_goal_dist, f_within_goal_dist, f_conflict, f_focused_intruder_grid, f_half_intruder_bin_grid, f_has_deviated
 
 type FeatureBlock
     members::Vector{Any}
@@ -241,6 +241,10 @@ function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Fl
         phi[inds[i]] = weights[i]
     end
     return phi
+end
+
+function f_has_deviated(state::EncounterState)
+    return convert(Float64, state.has_deviated)
 end
 
 function f_conflict(state::EncounterState)

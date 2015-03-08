@@ -1,13 +1,34 @@
+Sat 07 Mar 2015 11:03:16 AM PST
+[ ] bisect with accel actions
+    [ ] generate no collision ics
+[ ] look at trl policy
+[ ] bisect with trl actions
+
+Fri 06 Mar 2015 10:17:50 PM PST
+[X] generate ics that cause nmacs
+[X] bisect the static TRL Parameter to achieve risk ratio
+    with 500.0 min starting dist, 0.1 rr seems achievable, but anything less than 0.9 is not
+    with 800.0 min starting dist 0.05 seems achievable
+    D = 780 => rr=0.045 for 0.05 desired rr
+
+RED FLAG: randomness doesn't seem to be working quite right
+
+Fri 06 Mar 2015 05:00:41 PM PST
+[X] deviated feature
+[X] run test
+[X] decrease hrl precision
+
+
 Wed 04 Mar 2015 01:14:57 PM PST
     probably time to just go ahead and switch reward functions
     policy weirdness: 50k helps - make sure to run 50k on last value iteration
     do this now
     [X] Do first two problems of homework
-    [ ] Major Refactoring - tonight
+    [X] Major Refactoring - tonight
         [X] lambda -> theta everywhere
-        [ ] refactor features [test speed!]
-        [ ] augment state
-        [ ] refactor reward function
+        [X] refactor features [test speed!]
+        [X] augment state
+        [X] refactor reward function
 
 Wed 04 Mar 2015 12:37:12 AM PST
 tomorrow
