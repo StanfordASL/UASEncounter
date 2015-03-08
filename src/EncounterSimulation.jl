@@ -43,7 +43,10 @@ type EncounterTestInputData
     rm::RewardModel
     policy::EncounterPolicy
 
-    EncounterTestInputData() = new()
+    EncounterTestInputData() = new(nothing,
+                                   INTRUDER,OWNSHIP,SIM,
+                                   EncounterState([0,0,0],[0,0,0],false,false),
+                                   0, 200, REWARD,ConstPolicy(BankControl(0.0)))
     EncounterTestInputData(initial::EncounterState;
                            policy::EncounterPolicy=ConstPolicy(BankControl(0.0)),
                            seed::Int=0,
@@ -137,9 +140,6 @@ function run!(test::EncounterTest; announce=false, store_hist=true)
         end
         if s.has_deviated
             test.output.deviated = true
-        end
-        if !s.end_state
-            test.output.steps_before_end += 1
         end
     end
     a = query_policy(test.input.policy, s)
