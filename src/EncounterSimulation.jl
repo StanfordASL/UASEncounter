@@ -1,7 +1,7 @@
 module EncounterSimulation
 
 using EncounterModel
-using EncounterFeatures: FeatureBlock
+using EncounterFeatures: FeatureBlock, evaluate
 
 export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind, test_policy
 
@@ -45,7 +45,7 @@ type EncounterTestInputData
 
     EncounterTestInputData() = new()
     EncounterTestInputData(initial::EncounterState;
-                           policy::EncounterPolicy=ConstPolicy(HeadingHRL(SIM.legal_D)),
+                           policy::EncounterPolicy=ConstPolicy(BankControl(0.0)),
                            seed::Int=0,
                            rm::RewardModel=REWARD,
                            id=nothing) = new(id,INTRUDER, OWNSHIP, SIM, initial, seed, 200, rm, policy)

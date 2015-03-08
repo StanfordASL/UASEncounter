@@ -32,14 +32,25 @@ actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.ma
 
 lambdas = logspace(3,6,5)
 
-ic_filename = "../data/10k_collisions.ic"
-ic_data = JLD.load(ic_filename)
+c_ic_fname = "../data/10k_collisions.ic"
+col_data = JLD.load(c_ic_fname)
 
-ics = ic_data["ics"]
-seeds = ic_data["seeds"]
+col_ics = col_data["ics"]
+col_seeds = col_data["seeds"]
+
+m_ic_fname = "../data/10k_mixed.ic"
+mixed_data = JLD.load(m_ic_fname)
+
+mixed_ics = mixed_data["ics"]
+mixed_seeds = mixed_seeds["seeds"]
+num_mixed_collisions = mixed_seeds["num_collisions"]
 
 risk_ratios = Array(Float64, length(lambdas))
 policies = Array(Any, length(lambdas))
+deviations = Array(Int64, length(lambdas))
+avg_delays = Array(Int64, length(lambdas))
+
+baseline_completion_time = 61
 
 for i in 1:length(lambdas)
     tic()
@@ -48,15 +59,22 @@ for i in 1:length(lambdas)
     policy = find_policy(phi, rm, actions, intruder_grid)
     policies[i] = policy
 
-    tests = test_policy(policy, ics, seeds)   
-    n_nmac = sum([t.output.nmac for t in tests])
-    @show n_dev = sum([t.output.deviated for t in tests])
+    col_tests = test_policy(policy, col_ics, col_seeds)   
+    n_nmac = sum([t.output.nmac for t in col_tests])
+    @show n_dev = sum([t.output.deviated for t in col_tests])
     # deviation_tests = filter(t->t.output.deviated, tests)
 
+    mixed_tests = test_policy(policy, mixed_ics, mixed_seeds)
+    deviations[i] = sum([t.output.deviated for t in mixed_tests])
+    dev_tests = filter(t->t.output.deviated, mixed_tests)
+    avg_delays[i] = mean([t.output.steps_before_end-baseline_completion_time for t in dev_tests])
+
     @show lambda
-    @show risk_ratio = n_nmac/length(ics)
+    @show risk_ratio = n_nmac/length(col_ics)
+    @show deviations[i]
+    @show avg_delays[i] 
     risk_ratios[i] = risk_ratio
     toc()
 end
 
-JLD.@save filename lambdas risk_ratios policies
+JLD.@save filename lambdas risk_ratios policies deviations avg_delays
