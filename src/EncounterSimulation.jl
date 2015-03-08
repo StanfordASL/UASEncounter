@@ -59,7 +59,7 @@ type EncounterTestOutputData
     deviated::Bool
     steps_before_end::Int64
 
-    EncounterTestOutputData() = new({},{},0.0,false,false) 
+    EncounterTestOutputData() = new({},{},0.0,false,false, 0) 
 end
 
 type EncounterTest

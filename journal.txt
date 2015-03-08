@@ -1,6 +1,8 @@
 Sat 07 Mar 2015 11:03:16 AM PST
-[ ] bisect with accel actions
-    [ ] generate no collision ics
+[X] bisect with accel actions
+    [X] generate no collision ics
+    swept log from 1000 to 1e6. lowest rr was 0.0825 at lambda = 178k
+    saved in data/first_lagrange_bisection.jld
 [ ] look at trl policy
 [ ] bisect with trl actions
 
