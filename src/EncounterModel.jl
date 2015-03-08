@@ -58,7 +58,7 @@ const SIM = SimParams(1.0, 9.8, [1000.0, 0.0], 100.0, 100.0, 0.95)
 # const OWNSHIP = OwnshipParams(30.0, 45.0/180.0*pi, 1.0)
 const OWNSHIP = OwnshipParams(30.0, 45.0/180.0*pi, 3.0)
 # const INTRUDER = IntruderParams(60.0, 5.0/180.0*pi)
-const INTRUDER = IntruderParams(60.0, 15.0/180.0*pi)
+const INTRUDER = IntruderParams(60.0, 10.0/180.0*pi)
 
 abstract RewardModel
 

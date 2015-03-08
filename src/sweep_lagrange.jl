@@ -52,7 +52,7 @@ else
 end
 
 
-lambdas = logspace(3,6,8)
+lambdas = logspace(3,7,8)
 
 c_ic_fname = "../data/10k_collisions.ic"
 col_data = JLD.load(c_ic_fname)
@@ -89,7 +89,7 @@ for i in 1:length(lambdas)
 
     mixed_tests = test_policy(policy, mixed_ics, mixed_seeds)
     deviations[i] = sum([t.output.deviated for t in mixed_tests])
-    dev_no_nmac(t) = t.output.deviated && t.output.nmac
+    dev_no_nmac(t) = t.output.deviated && !t.output.nmac
     dev_tests = filter(dev_no_nmac, mixed_tests)
     # @show [t.output.steps_before_end-baseline_completion_time for t in dev_tests]
     avg_delays[i] = mean([t.output.steps_before_end-baseline_completion_time for t in dev_tests])

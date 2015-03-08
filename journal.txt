@@ -1,10 +1,14 @@
+Sun 08 Mar 2015 01:04:27 PM PDT
+Not able to make .05 rr with 15 deg noise! - switching to 10!
+with 10 deg noise, trl makes 0.05 with lambda=1000
+
 Sat 07 Mar 2015 11:03:16 AM PST
 [X] bisect with accel actions
     [X] generate no collision ics
     swept log from 1000 to 1e6. lowest rr was 0.0825 at lambda = 178k
     saved in data/first_lagrange_bisection.jld
 [ ] look at trl policy
-[ ] bisect with trl actions
+[X] bisect with trl actions
 
 Fri 06 Mar 2015 10:17:50 PM PST
 [X] generate ics that cause nmacs
