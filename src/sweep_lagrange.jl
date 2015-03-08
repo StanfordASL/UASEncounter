@@ -27,7 +27,7 @@ import HDF5, JLD
     phi = FeatureBlock(features)
 end
 
-@show filename = "../data/first_lagrange_bisection.jld"
+@show filename = "../data/first_turning_lagrange_sweep.jld"
 actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 lambdas = logspace(3,6,5)
