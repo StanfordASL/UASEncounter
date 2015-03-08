@@ -41,18 +41,19 @@ args = ArgParse.parse_args(s)
 end
 
 a_arg = args["a"]
-@show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
+# @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
 if a_arg == "turning"
     @show actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
+    lambdas = logspace(3,7,6)
 elseif a_arg == "trl"
     lD = SIM.legal_D
-    @show actions = EncounterAction[HeadingHRL(D) for D in [1.5*lD, 2.0*lD, 3.0*lD, 5.0*lD, 10.0*lD]]
+    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 5.0*lD]]
+    lambdas = logspace(2,5,6)
 else
     error("Invalid -a input. Expected \"trl\" or \"turning\"; got \"$a_arg\"")
 end
 
 
-lambdas = logspace(3,7,8)
 
 c_ic_fname = "../data/10k_collisions.ic"
 col_data = JLD.load(c_ic_fname)
@@ -72,7 +73,7 @@ policies = Array(Any, length(lambdas))
 deviations = Array(Int64, length(lambdas))
 avg_delays = Array(Float64, length(lambdas))
 
-baseline_completion_time = 61
+baseline_completion_time = 31
 
 # i = 1
 for i in 1:length(lambdas)
@@ -100,6 +101,7 @@ for i in 1:length(lambdas)
     @show avg_delays[i] 
     risk_ratios[i] = risk_ratio
     toc()
-end
 
-JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time
+    @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
+    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time
+end

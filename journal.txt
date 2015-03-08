@@ -1,6 +1,21 @@
 Sun 08 Mar 2015 01:04:27 PM PDT
-Not able to make .05 rr with 15 deg noise! - switching to 10!
+Not able to make .05 rr with 15 deg noise! See Mar 6 though - the static trl could make it
+SWITCHING TO 10!
 with 10 deg noise, trl makes 0.05 with lambda=1000
+with 10 deg noise static trl makes 0.0495 with D = 230
+
+This looks like the new baseline point for static trl is
+D = 230
+rr = 0.05
+deviations = 6800
+avg_delay = 5 (? adjusted for double counting)
+
+[X] have bisect save everything
+[X] change trl actions to go from 100 to 500
+[ ] run trl with lower lambda
+[ ] make sweep save periodically
+[ ] Make presentation
+[ ] Look at why the acceleration causes so many diversions
 
 Sat 07 Mar 2015 11:03:16 AM PST
 [X] bisect with accel actions
