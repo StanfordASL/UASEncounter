@@ -49,6 +49,10 @@ elseif a_arg == "trl"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 5.0*lD]]
     lambdas = logspace(2,5,6)
+elseif a_arg == "trlmatch"
+    lD = SIM.legal_D
+    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.3*lD]]
+    lambdas = logspace(3,5,5)
 else
     error("Invalid -a input. Expected \"trl\" or \"turning\"; got \"$a_arg\"")
 end

@@ -1,3 +1,19 @@
+Sun 08 Mar 2015 05:48:39 PM PDT
+
+[ ] slog through presentation
+[ ] Make a case for using post decision state [independent Q-value functions introduce paradoxical results: actions resulting in the same expected next state can have different values]
+[ ] run trl sweep with 100 150 200 230
+[ ] run trl sweep with 100 150 200 250 300
+[ ] implement post-decision policy
+[ ] Look at why the acceleration causes so many diversions
+
+TRL Lagrange sweep Mar 8 1812
+D = 100, 150, 200, 300, 500
+rr = 0.045
+deviations = 7627
+avg_delay = 6.27
+
+
 Sun 08 Mar 2015 01:04:27 PM PDT
 Not able to make .05 rr with 15 deg noise! See Mar 6 though - the static trl could make it
 SWITCHING TO 10!
@@ -12,10 +28,9 @@ avg_delay = 5 (? adjusted for double counting)
 
 [X] have bisect save everything
 [X] change trl actions to go from 100 to 500
-[ ] run trl with lower lambda
-[ ] make sweep save periodically
-[ ] Make presentation
-[ ] Look at why the acceleration causes so many diversions
+[X] run trl with lower lambda
+[X] make sweep save periodically
+
 
 Sat 07 Mar 2015 11:03:16 AM PST
 [X] bisect with accel actions
