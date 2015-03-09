@@ -2,14 +2,14 @@ module EncounterVisualization
 
 # import Gadfly
 using PyPlot
-using EncounterModel: IntruderState, EncounterState
-using EncounterFeatures: FeatureBlock
+using EncounterModel
+using EncounterFeatures
 using EncounterSimulation
 # using PGFPlots
 
 export plot_value_grid
 
-function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100)
+function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100;deviated=false)
     ymin = -600.0
     ymax = 600.0
     xmin = -100.0
@@ -19,7 +19,7 @@ function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::Intruder
     vals = Array(Float64, n, n)
     for i in 1:n
         for j in 1:n
-            state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false)
+            state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false,deviated)
             vals[i, j] = sum(evaluate(phi,state)'*theta)
         end
     end

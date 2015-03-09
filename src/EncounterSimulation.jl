@@ -23,6 +23,23 @@ function query_policy(p::LinearQValuePolicy, state::EncounterState)
     return p.actions[query_policy_ind(p,state)]
 end
 
+type LinearPostDecisionPolicy <: EncounterPolicy
+    phi::FeatureBlock
+    actions::Vector{EncounterAction}
+    theta::Vector{Float64}
+end
+function query_policy_ind(p::LinearPostDecisionPolicy, state::EncounterState)
+    pdvals=Array(PostDecisionState, length(p.actions))
+    for i in 1:length(pds)
+        pd = post_decision_state(state, p.actions[i])
+        pdvals[i] = sum(evaluate(p.phi,pd)'*p.theta)
+    end
+    return pd
+end
+function query_policy(p::LinearPostDecisionPolicy, state::EncounterState)
+    return p.actions[query_policy_ind(p,state)]
+end
+
 type ConstPolicy <: EncounterPolicy
     action::EncounterAction
 end

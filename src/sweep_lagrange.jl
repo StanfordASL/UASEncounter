@@ -32,7 +32,8 @@ args = ArgParse.parse_args(s)
         :f_in_goal,
         :f_goal_dist,
         :f_one,
-        :f_has_deviated,
+        #XXX
+        # :f_has_deviated,
         ParameterizedFeatureFunction(:f_radial_goal_grid, RectangleGrid(goal_dist_points, goal_bearing_points), true),
         ParameterizedFeatureFunction(:f_focused_intruder_grid, intruder_grid, true),
         :f_conflict,
@@ -47,7 +48,7 @@ if a_arg == "turning"
     lambdas = logspace(3,7,6)
 elseif a_arg == "trl"
     lD = SIM.legal_D
-    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 5.0*lD]]
+    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
     lambdas = logspace(2,5,6)
 elseif a_arg == "trlmatch"
     lD = SIM.legal_D
@@ -76,6 +77,7 @@ risk_ratios = Array(Float64, length(lambdas))
 policies = Array(Any, length(lambdas))
 deviations = Array(Int64, length(lambdas))
 avg_delays = Array(Float64, length(lambdas))
+avg_delays_all = Array(Float64, length(lambdas))
 
 baseline_completion_time = 31
 
@@ -83,7 +85,7 @@ baseline_completion_time = 31
 for i in 1:length(lambdas)
     tic()
     lambda = lambdas[i]
-    rm = DeviationAndTimeReward(100, 1, 100, lambda)
+    rm = DeviationAndTimeReward(0, 1, 100, lambda)
     policy = find_policy(phi, rm, actions, intruder_grid)
     policies[i] = policy
 
@@ -98,14 +100,15 @@ for i in 1:length(lambdas)
     dev_tests = filter(dev_no_nmac, mixed_tests)
     # @show [t.output.steps_before_end-baseline_completion_time for t in dev_tests]
     avg_delays[i] = mean([t.output.steps_before_end-baseline_completion_time for t in dev_tests])
+    avg_delays_all[i] = mean([t.output.steps_before_end-baseline_completion_time for t in mixed_tests])
 
     @show lambda
     @show risk_ratio = n_nmac/length(col_ics)
     @show deviations[i]
-    @show avg_delays[i] 
+    @show avg_delays_all[i] 
     risk_ratios[i] = risk_ratio
     toc()
 
     @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
-    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time
+    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all
 end

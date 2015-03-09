@@ -1,4 +1,3 @@
-
 function reward(sim::SimParams, op::OwnshipParams, ip::IntruderParams, rm::RewardModel, state::EncounterState, action::EncounterAction)
     if state.end_state
         return 0.0
@@ -46,5 +45,3 @@ reward(rm::RewardModel, state::EncounterState, action::EncounterAction) = reward
 #     return r
 # end
 # reward(state::EncounterState) = reward(SIM, OWNSHIP, INTRUDER, state, BankControl(0.0))
-
-

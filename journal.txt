@@ -1,8 +1,11 @@
+Mon 09 Mar 2015 03:33:30 AM PDT
+Seems like deviations might be causing a problem - try without
+
 Sun 08 Mar 2015 05:48:39 PM PDT
 
-[ ] slog through presentation
+[X] slog through presentation
 [ ] Make a case for using post decision state [independent Q-value functions introduce paradoxical results: actions resulting in the same expected next state can have different values]
-[ ] run trl sweep with 100 150 200 230
+[X] run trl sweep with 100 150 200 230
 [ ] run trl sweep with 100 150 200 250 300
 [ ] implement post-decision policy
 [ ] Look at why the acceleration causes so many diversions
