@@ -1,3 +1,9 @@
+Mon 09 Mar 2015 09:33:10 PM PDT
+turning is being rediculous. Why?
+
+1. [ ] Looks like it might be something to do with the grid - introduce the DAMN snapping
+2. [ ] post-decision state
+
 Mon 09 Mar 2015 03:33:30 AM PDT
 Seems like deviations might be causing a problem - try without
 

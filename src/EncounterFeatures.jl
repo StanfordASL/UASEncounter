@@ -12,6 +12,7 @@ import Base.length
 export ParameterizedFeatureBlock, ParameterizedFeatureFunction
 export evaluate
 export FeatureBlock
+export GOAL_GRID, INTRUDER_GRID, FEATURES
 export f_in_goal, f_mindist_time, f_one_over_mindist_time, f_exp_neg_mindist, f_exp_neg_dist, f_one_over_mindist, f_one_over_dist, f_intruder_dist, f_one, f_goal_dist, f_abs_goal_bearing, f_radial_intruder_grid, f_radial_goal_grid, f_exp_neg_goal_dist, f_within_goal_dist, f_conflict, f_focused_intruder_grid, f_half_intruder_bin_grid, f_has_deviated
 
 type FeatureBlock
@@ -32,6 +33,7 @@ end
 
 length(b::FeatureBlock) = sum([length(m) for m in b.members])
 uses_mem(b::FeatureBlock) = b.uses_mem
+
 
 # fun returns a single element vector, there are many param values
 type ParameterizedFeatureBlock
@@ -64,6 +66,7 @@ type FeatureFunction
 end
 uses_mem(f::FeatureFunction) = false
 length(f::FeatureFunction) = 1
+
 
 function evaluate(block::ParameterizedFeatureBlock, state::EncounterState)
     b = Array(Float64, length(block.params))
@@ -210,7 +213,6 @@ function f_half_intruder_bin_grid(state, p::Dict{Symbol, Any}=[:num_intruder_dis
     return phi
 end
 
-
 function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Float64}=Float64[])
     # phi = spzeros(length(grid),1)
     phi = memory
@@ -236,6 +238,11 @@ function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Fl
     while bearing >= 2*pi bearing -= 2*pi end
 
     inds, weights = interpolants(grid, [d, bearing])
+    # if maximum(weights) < 0.95
+    #     @show state
+    #     @show d,heading,bearing
+    #     @show ind2x(grid, inds[indmax(weights)])
+    # end
 
     for i in 1:length(inds)
         phi[inds[i]] = weights[i]
@@ -279,6 +286,26 @@ function f_one(state::EncounterState)
     return convert(Float64, !state.end_state)
 end
 
+goal_dist_points = linspace(0.0, 500.0, 10)
+goal_bearing_points = linspace(0.0, 2*pi, 15)
+const GOAL_GRID = RectangleGrid(goal_dist_points, goal_bearing_points)
+
+intruder_dist_points = linspace(0.0, 700.0, 12) 
+intruder_bearing_points = linspace(-pi/2, pi/2, 12)
+intruder_heading_points = linspace(0.0, 2*pi, 12)
+const INTRUDER_GRID = RectangleGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points)
+
+features = [
+    :f_in_goal,
+    :f_goal_dist,
+    :f_one,
+    #XXX
+    # :f_has_deviated,
+    ParameterizedFeatureFunction(:f_radial_goal_grid, GOAL_GRID, true),
+    ParameterizedFeatureFunction(:f_focused_intruder_grid, INTRUDER_GRID, true),
+    :f_conflict,
+]
+const FEATURES = FeatureBlock(features)
 
 # function kaelbling_intruder(state)
 #     return [dist(state), 1.0/dist(state), 

@@ -26,10 +26,9 @@ function gen_state(rng::AbstractRNG)
     return EncounterState([ox,oy,ohead],[ix, iy, ihead],false,has_deviated)
 end
 
-# HACK
-function gen_state_snap_to_grid(rng::AbstractRNG, grid)
+function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid)
     state=gen_state(rng)
-    
+
     is = state.is
     os = state.os
 
@@ -44,20 +43,105 @@ function gen_state_snap_to_grid(rng::AbstractRNG, grid)
     while heading >= 2*pi heading -= 2*pi end
     while heading < 0.0 heading += 2*pi end
 
-    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(grid.cutPoints[1])
+    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(intruder_grid.cutPoints[1])
         return state
     end
 
-    inds, weights = interpolants(grid, [d, bearing, heading])
+    inds, weights = interpolants(intruder_grid, [d, bearing, heading])
 
-    # @show ind2x(grid, inds[indmax(weights)])
-    (dnew,bnew,hnew) = ind2x(grid, inds[indmax(weights)])
+    # @show ind2x(intruder_grid, inds[indmax(weights)])
+    (dnew,bnew,hnew) = ind2x(intruder_grid, inds[indmax(weights)])
     if dnew == 0.0
         dnew += 1e-5
     end
 
     state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
     state.os[3] = hnew+is[3]
+
+    # DEBUG
+    # is = state.is
+    # os = state.os
+
+    # d = norm(os[1:2]-is[1:2])-SIM.legal_D
+
+    # # bearing to ownship from intruder's perspective
+    # bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+    # while bearing >= pi bearing -= 2*pi end
+    # while bearing < -pi bearing += 2*pi end
+    # # relative heading of ownship compared to intruder
+    # heading = os[3] - is[3]
+    # while heading >= 2*pi heading -= 2*pi end
+    # while heading < 0.0 heading += 2*pi end
+
+    # @show (dnew,d)
+    # @show (bnew,bearing)
+    # @show (hnew,heading)
+
+    return state
+end
+
+
+# HACK
+# this is such a pain!!!
+# I hate this
+function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
+    state=gen_state(rng)
+
+    # snap os to nearest goal point
+    os = state.os
+
+    d_goal = min(norm(os[1:2]-SIM.goal_location)-SIM.goal_radius, maximum(goal_grid.cutPoints[1]))
+
+    if d_goal > 0.0 && d_goal <= maximum(goal_grid.cutPoints[1])
+        heading = atan2(SIM.goal_location[2]-os[2], SIM.goal_location[1]-os[1])
+        if heading <= 0.0 heading += 2*pi end # heading now 0 to 2*pi
+        bearing = heading-os[3]
+        while bearing < 0.0 bearing += 2*pi end
+        while bearing >= 2*pi bearing -= 2*pi end
+
+        inds, weights = interpolants(goal_grid, [d_goal, bearing])
+
+        (dgnew,bgnew) = ind2x(goal_grid, inds[indmax(weights)])
+        if dgnew < 1e-5
+            dgnew += 1e-5
+        end
+
+        state.os[1:2] = (os[1:2]-SIM.goal_location)*(dgnew+SIM.goal_radius)/(d_goal+SIM.goal_radius)+SIM.goal_location
+        state.os[3] = heading-bgnew
+    end
+
+    # snap is so that os is on nearest
+    os = state.os
+    is = state.is
+
+    d = norm(os[1:2]-is[1:2])-SIM.legal_D
+
+    # bearing to ownship from intruder's perspective
+    bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+    while bearing >= pi bearing -= 2*pi end
+    while bearing < -pi bearing += 2*pi end
+    # relative heading of ownship compared to intruder
+    heading = os[3] - is[3]
+    while heading >= 2*pi heading -= 2*pi end
+    while heading < 0.0 heading += 2*pi end
+
+    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(intruder_grid.cutPoints[1])
+        return state
+    end
+
+    inds, weights = interpolants(intruder_grid, [d, bearing, heading])
+
+    # @show ind2x(intruder_grid, inds[indmax(weights)])
+    (dnew,bnew,hnew) = ind2x(intruder_grid, inds[indmax(weights)])
+    if dnew == 0.0
+        dnew += 1e-5
+    end
+
+    state.is[3] = os[3] - hnew
+    state.is[1:2] = os[1:2] - [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
+
+    # state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
+    # state.os[3] = hnew+is[3]
 
     # DEBUG
     # is = state.is

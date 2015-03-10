@@ -19,27 +19,7 @@ end
 
 args = ArgParse.parse_args(s)
 
-@everywhere begin
-    goal_dist_points = linspace(0.0, 500.0, 10)
-    goal_bearing_points = linspace(0.0, 2*pi, 15)
-
-    intruder_dist_points = linspace(0.0, 700.0, 12) 
-    intruder_bearing_points = linspace(-pi/2, pi/2, 12)
-    intruder_heading_points = linspace(0.0, 2*pi, 12)
-    intruder_grid = RectangleGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points)
-
-    features = [
-        :f_in_goal,
-        :f_goal_dist,
-        :f_one,
-        #XXX
-        # :f_has_deviated,
-        ParameterizedFeatureFunction(:f_radial_goal_grid, RectangleGrid(goal_dist_points, goal_bearing_points), true),
-        ParameterizedFeatureFunction(:f_focused_intruder_grid, intruder_grid, true),
-        :f_conflict,
-    ]
-    phi = FeatureBlock(features)
-end
+include("features_no_dev.jl")
 
 a_arg = args["a"]
 # @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
@@ -57,8 +37,6 @@ elseif a_arg == "trlmatch"
 else
     error("Invalid -a input. Expected \"trl\" or \"turning\"; got \"$a_arg\"")
 end
-
-
 
 c_ic_fname = "../data/10k_collisions.ic"
 col_data = JLD.load(c_ic_fname)

@@ -27,6 +27,7 @@ Ds = Float64[]
 risk_ratios = Float64[]
 deviations = Float64[]
 avg_delays = Float64[]
+avg_delays_all = Float64[]
 baseline_completion_time = 31
 
 while max_D - min_D > 1.0
@@ -59,7 +60,9 @@ while max_D - min_D > 1.0
     dev_tests = filter(dev_no_nmac, mixed_tests)
     # @show [t.output.steps_before_end-baseline_completion_time for t in dev_tests]
     @show avg_delay = mean([t.output.steps_before_end-baseline_completion_time for t in dev_tests])
+    @show avg_delay_all = mean([t.output.steps_before_end-baseline_completion_time for t in mixed_tests])
     push!(avg_delays, avg_delay)
+    push!(avg_delays_all, avg_delay_all)
 
     if risk_ratio > target_rr
         @show min_D = new_D
@@ -68,4 +71,4 @@ while max_D - min_D > 1.0
     end
 end
 
-JLD.@save filename Ds risk_ratios deviations avg_delays baseline_completion_time
+JLD.@save filename Ds risk_ratios deviations avg_delays baseline_completion_time avg_delays_all
