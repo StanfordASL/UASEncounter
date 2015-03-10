@@ -69,7 +69,7 @@ type DeviationAndTimeReward <: RewardModel
     nmac_lambda::Float64
 end
 
-REWARD = DeviationAndTimeReward(100,1,100,1000)
+REWARD = DeviationAndTimeReward(0,1,100,1000)
 
 # utility functions like dist, toca, etc
 include("em_util.jl")

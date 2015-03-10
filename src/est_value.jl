@@ -55,14 +55,14 @@ rng0 = MersenneTwister(0)
 theta = zeros(length(phi))
 plot_is = [550.0, -300.0, pi/180.0*135.0]
 plot_heading = 0.0
-rm = DeviationAndTimeReward(100.0, 1.0, 100.0, 1000.0)
+rew = REWARD
 @everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, INTRUDER_GRID, GOAL_GRID)
 try
     for i in 1:30
         sims_per_policy = 10000
         println("starting value iteration $i ($sims_per_policy simulations)")
         ic_batch = gen_ic_batch_for_grid(rng0, INTRUDER_GRID, GOAL_GRID)
-        theta_new = iterate(phi, theta, rm, actions, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
+        theta_new = iterate(phi, theta, rew, actions, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
         theta = theta_new
 
         EncounterVisualization.plot_value_grid(phi, theta, plot_is, plot_heading)
@@ -71,7 +71,7 @@ try
     sims_per_policy = 50000
     println("starting final value iteration ($sims_per_policy simulations)")
     ic_batch = gen_ic_batch_for_grid(rng0, INTRUDER_GRID, GOAL_GRID)
-    theta_new = iterate(phi, theta, rm, actions, sims_per_policy, rng_seed_offset=0, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
+    theta_new = iterate(phi, theta, rew, actions, sims_per_policy, rng_seed_offset=0, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
     theta = theta_new
 
     EncounterVisualization.plot_value_grid(phi, theta, plot_is, plot_heading)
@@ -80,7 +80,7 @@ try
     JLD.save(filename,
              "theta", theta,
              "phi", phi,
-             "rm", rm,
+             "rm", rew,
              "actions", actions,
              "intruder_grid", INTRUDER_GRID
              )

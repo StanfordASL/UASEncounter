@@ -330,33 +330,42 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     return new_theta
 end
 
-# function extract_pd_policy(phi::FeatureBlock,
-#                             theta::AbstractVector{Float64},
-#                             num_sims::Int;
-#                             new_phi=nothing,
-#                             num_EV::Int=20,
-#                             state_gen::Function=gen_state, 
-#                             ic_batch::Vector{EncounterState}=EncounterState[])
-# 
-#     rng = MersenneTwister(0)
-#     if new_phi==nothing
-#         new_phi = phi
-#     end
-#     new_theta = Array(Float64, length(new_phi))
-# 
-#     Phi = Array(Float64, num_sims, length(new_theta))
-#     vs = Array(Float64, num_sims)
-#     for i = 1:num_sims
-#         m = state_gen(rng)
-#         Phi[n,:] = evaluate(new_phi,m)
-#         v = 0
-#         for j = 1:num_EV
-#             v += sum(evaluate(phi, sp)'*theta)
-#         end
-#     end
-# 
-# 
-# end
+function extract_pd_policy(phi::FeatureBlock,
+                            theta::AbstractVector{Float64},
+                            actions::Vector{EncounterAction},
+                            num_sims::Int;
+                            new_phi=nothing,
+                            num_EV::Int=20,
+                            state_gen::Function=gen_state, 
+                            ic_batch::Vector{EncounterState}=EncounterState[])
+
+    rng = MersenneTwister(0)
+    if new_phi==nothing
+        new_phi = phi
+    end
+    new_theta = Array(Float64, length(new_phi))
+
+    println("running_sims...")
+
+    Phi = Array(Float64, num_sims, length(new_theta))
+    v = Array(Float64, num_sims)
+    for n = 1:num_sims
+        pd = state_gen(rng)
+        Phi[n,:] = evaluate(new_phi,pd)
+        vn = 0
+        for l = 1:num_EV
+            sp = next_state_from_pd(pd, rng)
+            vn += sum(evaluate(phi, sp)'*theta)
+        end
+        v[n]= vn/num_EV
+    end
+    
+    println("inverting...")
+    new_theta=pinv(Phi)*v
+
+    return LinearPostDecisionPolicy(new_phi, actions, new_theta)
+
+end
 
 function extract_policy(phi::FeatureBlock,
                         theta::AbstractVector{Float64},

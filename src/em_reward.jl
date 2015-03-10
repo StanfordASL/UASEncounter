@@ -12,7 +12,7 @@ function reward(sim::SimParams, op::OwnshipParams, ip::IntruderParams, rm::Rewar
     end
 
     if !state.has_deviated
-        if ownship_control(op, ip, state, action).bank > 1e-5
+        if abs(ownship_control(op, ip, state, action).bank) > 1e-5
             r-=rm.deviation_cost
         end
     end
