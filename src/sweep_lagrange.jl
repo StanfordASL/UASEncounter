@@ -19,7 +19,7 @@ end
 
 args = ArgParse.parse_args(s)
 
-include("features_no_dev.jl")
+phi = FEATURES
 
 a_arg = args["a"]
 # @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
