@@ -15,6 +15,9 @@ ArgParse.@add_arg_table s begin
         help = "\"trl\" or \"turning\" actions"
         arg_type = ASCIIString
         default = "turning"
+    "--pd"
+        help = "use post decision state policies"
+        action = :store_true
 end
 
 args = ArgParse.parse_args(s)
@@ -64,7 +67,8 @@ for i in 1:length(lambdas)
     tic()
     lambda = lambdas[i]
     rm = DeviationAndTimeReward(0, 1, 100, lambda)
-    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID)
+    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID
+                         post_decision=args["pd"])
     policies[i] = policy
 
     col_tests = test_policy(policy, col_ics, col_seeds)   
