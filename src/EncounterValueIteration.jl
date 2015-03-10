@@ -215,7 +215,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
         tic()
         sims_per_policy = 10000
         # println("starting value iteration $i ($sims_per_policy simulations)")
-        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
         theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
                             rng_seed_offset=i,
                             state_gen=snap_generator,
@@ -230,7 +230,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     tic()
     sims_per_policy = 50000
     # println("starting final value iteration ($sims_per_policy simulations)")
-    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
     theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
                         rng_seed_offset=2011,
                         state_gen=snap_generator,
@@ -241,7 +241,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     theta = theta_new
     toc()
 
-    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid)
+    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
     return extract_policy(phi, theta, rm, actions, 50000,
                             ic_batch=ic_batch,
                             state_gen=snap_generator)
@@ -338,11 +338,22 @@ end
 #                             state_gen::Function=gen_state, 
 #                             ic_batch::Vector{EncounterState}=EncounterState[])
 # 
+#     rng = MersenneTwister(0)
 #     if new_phi==nothing
 #         new_phi = phi
 #     end
 #     new_theta = Array(Float64, length(new_phi))
 # 
+#     Phi = Array(Float64, num_sims, length(new_theta))
+#     vs = Array(Float64, num_sims)
+#     for i = 1:num_sims
+#         m = state_gen(rng)
+#         Phi[n,:] = evaluate(new_phi,m)
+#         v = 0
+#         for j = 1:num_EV
+#             v += sum(evaluate(phi, sp)'*theta)
+#         end
+#     end
 # 
 # 
 # end
