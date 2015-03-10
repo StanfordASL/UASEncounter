@@ -255,7 +255,7 @@ end
 function find_policy{A<:EncounterAction}(phi::FeatureBlock,
                      rm::RewardModel,
                      actions::Vector{A},
-                     intruder_grid::AbstractGrid
+                     intruder_grid::AbstractGrid,
                      goal_grid::AbstractGrid)
 
     rng0 = MersenneTwister(0)
