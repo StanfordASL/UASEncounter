@@ -234,8 +234,10 @@ function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Fl
     heading = atan2(SIM.goal_location[2]-os[2], SIM.goal_location[1]-os[1])
     if heading <= 0.0 heading += 2*pi end # heading now 0 to 2*pi
     bearing = heading-os[3]
-    while bearing < 0.0 bearing += 2*pi end
-    while bearing >= 2*pi bearing -= 2*pi end
+    while bearing < -pi bearing += 2*pi end
+    while bearing > pi bearing -= 2*pi end
+    # while bearing < 0.0 bearing += 2*pi end
+    # while bearing >= 2*pi bearing -= 2*pi end
 
     inds, weights = interpolants(grid, [d, bearing])
     # if maximum(weights) < 0.95
@@ -287,7 +289,7 @@ function f_one(state::EncounterState)
 end
 
 goal_dist_points = linspace(0.0, 500.0, 10)
-goal_bearing_points = linspace(0.0, 2*pi, 15)
+goal_bearing_points = linspace(-pi, pi, 15)
 const GOAL_GRID = RectangleGrid(goal_dist_points, goal_bearing_points)
 
 intruder_dist_points = linspace(0.0, 700.0, 12) 

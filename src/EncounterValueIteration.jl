@@ -26,67 +26,7 @@ function gen_state(rng::AbstractRNG)
     return EncounterState([ox,oy,ohead],[ix, iy, ihead],false,has_deviated)
 end
 
-function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid)
-    state=gen_state(rng)
-
-    is = state.is
-    os = state.os
-
-    d = norm(os[1:2]-is[1:2])-SIM.legal_D
-
-    # bearing to ownship from intruder's perspective
-    bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
-    while bearing >= pi bearing -= 2*pi end
-    while bearing < -pi bearing += 2*pi end
-    # relative heading of ownship compared to intruder
-    heading = os[3] - is[3]
-    while heading >= 2*pi heading -= 2*pi end
-    while heading < 0.0 heading += 2*pi end
-
-    if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(intruder_grid.cutPoints[1])
-        return state
-    end
-
-    inds, weights = interpolants(intruder_grid, [d, bearing, heading])
-
-    # @show ind2x(intruder_grid, inds[indmax(weights)])
-    (dnew,bnew,hnew) = ind2x(intruder_grid, inds[indmax(weights)])
-    if dnew == 0.0
-        dnew += 1e-5
-    end
-
-    state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
-    state.os[3] = hnew+is[3]
-
-    # DEBUG
-    # is = state.is
-    # os = state.os
-
-    # d = norm(os[1:2]-is[1:2])-SIM.legal_D
-
-    # # bearing to ownship from intruder's perspective
-    # bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
-    # while bearing >= pi bearing -= 2*pi end
-    # while bearing < -pi bearing += 2*pi end
-    # # relative heading of ownship compared to intruder
-    # heading = os[3] - is[3]
-    # while heading >= 2*pi heading -= 2*pi end
-    # while heading < 0.0 heading += 2*pi end
-
-    # @show (dnew,d)
-    # @show (bnew,bearing)
-    # @show (hnew,heading)
-
-    return state
-end
-
-
-# HACK
-# this is such a pain!!!
-# I hate this
-function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
-    state=gen_state(rng)
-
+function snap_os_to_goal_grid(state::EncounterState, goal_grid)
     # snap os to nearest goal point
     os = state.os
 
@@ -109,7 +49,11 @@ function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
         state.os[1:2] = (os[1:2]-SIM.goal_location)*(dgnew+SIM.goal_radius)/(d_goal+SIM.goal_radius)+SIM.goal_location
         state.os[3] = heading-bgnew
     end
+    
+    return state
+end
 
+function snap_is_to_intruder_grid(state::EncounterState, intruder_grid)
     # snap is so that os is on nearest
     os = state.os
     is = state.is
@@ -140,40 +84,23 @@ function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
     state.is[3] = os[3] - hnew
     state.is[1:2] = os[1:2] - [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
 
-    # state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
-    # state.os[3] = hnew+is[3]
-
-    # DEBUG
-    # is = state.is
-    # os = state.os
-
-    # d = norm(os[1:2]-is[1:2])-SIM.legal_D
-
-    # # bearing to ownship from intruder's perspective
-    # bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
-    # while bearing >= pi bearing -= 2*pi end
-    # while bearing < -pi bearing += 2*pi end
-    # # relative heading of ownship compared to intruder
-    # heading = os[3] - is[3]
-    # while heading >= 2*pi heading -= 2*pi end
-    # while heading < 0.0 heading += 2*pi end
-
-    # @show (dnew,d)
-    # @show (bnew,bearing)
-    # @show (hnew,heading)
-
     return state
 end
 
+function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
+    state=gen_state(rng)
+    return snap_is_to_intruder_grid(snap_os_to_goal_grid(state, goal_grid),intruder_grid)
+end
+
 # HACK
-function gen_ic_batch_for_grid(rng, grid)
-    ics = Array(EncounterState, length(grid))
-    for i in 1:length(grid)
+function gen_ic_batch_for_grid(rng, intruder_grid, goal_grid)
+    ics = Array(EncounterState, length(intruder_grid)+length(goal_grid))
+    for i in 1:length(intruder_grid)
         ix = 1000.0*rand(rng)
         iy = 2000.0*(rand(rng)-0.5)
         ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
         is = [ix, iy, ihead]
-        (dnew,bnew,hnew) = ind2x(grid,i)
+        (dnew,bnew,hnew) = ind2x(intruder_grid,i)
         if dnew <= 0.0
             dnew+=1e-5
         end
@@ -187,10 +114,31 @@ function gen_ic_batch_for_grid(rng, grid)
               is[2]+(dnew+SIM.legal_D)*sin(is[3]+bnew),
               is[3]+hnew]
         ics[i] = EncounterState(os, is, false)
-        feat = f_focused_intruder_grid(ics[i],grid)
+        feat = f_focused_intruder_grid(ics[i],intruder_grid)
         if length(find(feat))==0
             @show (dnew,bnew,hnew)
         end
+    end
+    for i in 1:length(goal_grid)
+        (dnew,bnew) = ind2x(goal_grid,i)
+        if dnew <= 0.0
+            dnew+=1e-5
+        end
+        if bnew > pi/2 - 1e-5
+            bnew-=1e-5
+        end
+        if bnew < -pi/2 + 1e-5
+            bnew+=1e-5
+        end
+        head = 2*pi*rand(rng)
+        oxy = SIM.goal_location-(dnew+SIM.goal_radius)*[cos(head+bnew), sin(head+bnew)]
+        ix = 1000.0*rand(rng)
+        iy = 2000.0*(rand(rng)-0.5)
+        ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
+        is = [ix, iy, ihead]
+        state = EncounterState([oxy[1],oxy[2],head],is,false,false)
+        state = snap_is_to_intruder_grid(state, intruder_grid)
+        ics[length(intruder_grid)+i] = state
     end
     return ics
 end
@@ -382,15 +330,19 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     return new_theta
 end
 
-# function extract_post_decision(phi::FeatureBlock,
-#                         theta::AbstractVector{Float64},
-#                         rm::RewardModel,
-#                         actions::Vector{EncounterAction},
-#                         num_sims::Int;
-#                         new_phi=nothing,
-#                         num_EV::Int=20,
-#                         state_gen::Function=gen_state, 
-#                         ic_batch::Vector{EncounterState}=EncounterState[])
+# function extract_pd_policy(phi::FeatureBlock,
+#                             theta::AbstractVector{Float64},
+#                             num_sims::Int;
+#                             new_phi=nothing,
+#                             num_EV::Int=20,
+#                             state_gen::Function=gen_state, 
+#                             ic_batch::Vector{EncounterState}=EncounterState[])
+# 
+#     if new_phi==nothing
+#         new_phi = phi
+#     end
+#     new_theta = Array(Float64, length(new_phi))
+# 
 # 
 # 
 # end
@@ -424,6 +376,145 @@ function extract_policy(phi::FeatureBlock,
 
     return p
 end
+
+
+#     state=gen_state(rng)
+# 
+#     is = state.is
+#     os = state.os
+# 
+#     d = norm(os[1:2]-is[1:2])-SIM.legal_D
+# 
+#     # bearing to ownship from intruder's perspective
+#     bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+#     while bearing >= pi bearing -= 2*pi end
+#     while bearing < -pi bearing += 2*pi end
+#     # relative heading of ownship compared to intruder
+#     heading = os[3] - is[3]
+#     while heading >= 2*pi heading -= 2*pi end
+#     while heading < 0.0 heading += 2*pi end
+# 
+#     if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(intruder_grid.cutPoints[1])
+#         return state
+#     end
+# 
+#     inds, weights = interpolants(intruder_grid, [d, bearing, heading])
+# 
+#     # @show ind2x(intruder_grid, inds[indmax(weights)])
+#     (dnew,bnew,hnew) = ind2x(intruder_grid, inds[indmax(weights)])
+#     if dnew == 0.0
+#         dnew += 1e-5
+#     end
+# 
+#     state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
+#     state.os[3] = hnew+is[3]
+# 
+#     # DEBUG
+#     # is = state.is
+#     # os = state.os
+# 
+#     # d = norm(os[1:2]-is[1:2])-SIM.legal_D
+# 
+#     # # bearing to ownship from intruder's perspective
+#     # bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+#     # while bearing >= pi bearing -= 2*pi end
+#     # while bearing < -pi bearing += 2*pi end
+#     # # relative heading of ownship compared to intruder
+#     # heading = os[3] - is[3]
+#     # while heading >= 2*pi heading -= 2*pi end
+#     # while heading < 0.0 heading += 2*pi end
+# 
+#     # @show (dnew,d)
+#     # @show (bnew,bearing)
+#     # @show (hnew,heading)
+# 
+#     return state
+# end
+
+
+# HACK HACK HACK
+# this is such a pain!!!
+# I hate this
+# function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
+#     state=gen_state(rng)
+# 
+#     # snap os to nearest goal point
+#     os = state.os
+# 
+#     d_goal = min(norm(os[1:2]-SIM.goal_location)-SIM.goal_radius, maximum(goal_grid.cutPoints[1]))
+# 
+#     if d_goal > 0.0 && d_goal <= maximum(goal_grid.cutPoints[1])
+#         heading = atan2(SIM.goal_location[2]-os[2], SIM.goal_location[1]-os[1])
+#         if heading <= 0.0 heading += 2*pi end # heading now 0 to 2*pi
+#         bearing = heading-os[3]
+#         while bearing < 0.0 bearing += 2*pi end
+#         while bearing >= 2*pi bearing -= 2*pi end
+# 
+#         inds, weights = interpolants(goal_grid, [d_goal, bearing])
+# 
+#         (dgnew,bgnew) = ind2x(goal_grid, inds[indmax(weights)])
+#         if dgnew < 1e-5
+#             dgnew += 1e-5
+#         end
+# 
+#         state.os[1:2] = (os[1:2]-SIM.goal_location)*(dgnew+SIM.goal_radius)/(d_goal+SIM.goal_radius)+SIM.goal_location
+#         state.os[3] = heading-bgnew
+#     end
+# 
+#     # snap is so that os is on nearest
+#     os = state.os
+#     is = state.is
+# 
+#     d = norm(os[1:2]-is[1:2])-SIM.legal_D
+# 
+#     # bearing to ownship from intruder's perspective
+#     bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+#     while bearing >= pi bearing -= 2*pi end
+#     while bearing < -pi bearing += 2*pi end
+#     # relative heading of ownship compared to intruder
+#     heading = os[3] - is[3]
+#     while heading >= 2*pi heading -= 2*pi end
+#     while heading < 0.0 heading += 2*pi end
+# 
+#     if bearing > pi/2 || bearing < -pi/2 || d <= 0.0 || d > maximum(intruder_grid.cutPoints[1])
+#         return state
+#     end
+# 
+#     inds, weights = interpolants(intruder_grid, [d, bearing, heading])
+# 
+#     # @show ind2x(intruder_grid, inds[indmax(weights)])
+#     (dnew,bnew,hnew) = ind2x(intruder_grid, inds[indmax(weights)])
+#     if dnew == 0.0
+#         dnew += 1e-5
+#     end
+# 
+#     state.is[3] = os[3] - hnew
+#     state.is[1:2] = os[1:2] - [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
+# 
+#     # state.os[1:2] = is[1:2] + [(dnew+SIM.legal_D)*cos(is[3]+bnew), (dnew+SIM.legal_D)*sin(is[3]+bnew)]
+#     # state.os[3] = hnew+is[3]
+# 
+#     # DEBUG
+#     # is = state.is
+#     # os = state.os
+# 
+#     # d = norm(os[1:2]-is[1:2])-SIM.legal_D
+# 
+#     # # bearing to ownship from intruder's perspective
+#     # bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
+#     # while bearing >= pi bearing -= 2*pi end
+#     # while bearing < -pi bearing += 2*pi end
+#     # # relative heading of ownship compared to intruder
+#     # heading = os[3] - is[3]
+#     # while heading >= 2*pi heading -= 2*pi end
+#     # while heading < 0.0 heading += 2*pi end
+# 
+#     # @show (dnew,d)
+#     # @show (bnew,bearing)
+#     # @show (hnew,heading)
+# 
+#     return state
+# end
 
 
 end
