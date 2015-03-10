@@ -255,12 +255,13 @@ end
 function find_policy{A<:EncounterAction}(phi::FeatureBlock,
                      rm::RewardModel,
                      actions::Vector{A},
-                     intruder_grid::AbstractGrid)
+                     intruder_grid::AbstractGrid
+                     goal_grid::AbstractGrid)
 
     rng0 = MersenneTwister(0)
 
     theta = zeros(length(phi))
-    snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid)
+    snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid, goal_grid)
 
     for i in 1:30
         tic()
@@ -380,6 +381,19 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
 
     return new_theta
 end
+
+# function extract_post_decision(phi::FeatureBlock,
+#                         theta::AbstractVector{Float64},
+#                         rm::RewardModel,
+#                         actions::Vector{EncounterAction},
+#                         num_sims::Int;
+#                         new_phi=nothing,
+#                         num_EV::Int=20,
+#                         state_gen::Function=gen_state, 
+#                         ic_batch::Vector{EncounterState}=EncounterState[])
+# 
+# 
+# end
 
 function extract_policy(phi::FeatureBlock,
                         theta::AbstractVector{Float64},

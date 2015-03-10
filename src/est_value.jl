@@ -3,7 +3,7 @@
 @everywhere using EncounterFeatures
 @everywhere using GridInterpolations
 @everywhere using EncounterValueIteration
-# import EncounterVisualization
+import EncounterVisualization
 import HDF5, JLD
 import Dates
 
@@ -56,7 +56,7 @@ theta = zeros(length(phi))
 plot_is = [550.0, -300.0, pi/180.0*135.0]
 plot_heading = 0.0
 rm = DeviationAndTimeReward(100.0, 1.0, 100.0, 1000.0)
-@everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, INTRUDER_GRID)
+@everywhere snap_generator(rng) = gen_state_snap_to_grid(rng, INTRUDER_GRID, GOAL_GRID)
 try
     for i in 1:30
         sims_per_policy = 10000
@@ -64,6 +64,8 @@ try
         ic_batch = gen_ic_batch_for_grid(rng0, INTRUDER_GRID)
         theta_new = iterate(phi, theta, rm, actions, sims_per_policy, rng_seed_offset=i*1120000+1, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
         theta = theta_new
+
+        EncounterVisualization.plot_value_grid(phi, theta, plot_is, plot_heading)
     end
 
     sims_per_policy = 50000
@@ -71,6 +73,8 @@ try
     ic_batch = gen_ic_batch_for_grid(rng0, INTRUDER_GRID)
     theta_new = iterate(phi, theta, rm, actions, sims_per_policy, rng_seed_offset=0, state_gen=snap_generator, parallel=true, ic_batch=ic_batch)
     theta = theta_new
+
+    EncounterVisualization.plot_value_grid(phi, theta, plot_is, plot_heading)
 
     filename = "../data/$(file_prefix)_$(Dates.format(Dates.now(),"u-d_HHMM")).value" 
     JLD.save(filename,
