@@ -37,7 +37,7 @@ function post_decision_state(sim::SimParams, op::OwnshipParams, ip::IntruderPara
     end
 
     ctrl = ownship_control(op, ip, state, action)
-    if ctrl.bank > 1e-5
+    if abs(ctrl.bank) > 1e-5
         pd.has_deviated = true
     end
     ownship_dynamics!(pd.os, sim, op, state.os, ctrl)
