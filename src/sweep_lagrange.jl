@@ -67,7 +67,7 @@ for i in 1:length(lambdas)
     tic()
     lambda = lambdas[i]
     rm = DeviationAndTimeReward(0, 1, 100, lambda)
-    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID
+    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID,
                          post_decision=args["pd"])
     policies[i] = policy
 
