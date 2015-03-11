@@ -3,7 +3,7 @@ module EncounterValueIteration
 
 using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, EncounterAction, RewardModel, ownship_dynamics, encounter_dynamics, next_state_from_pd, post_decision_state, reward, SIM
 using EncounterFeatures: FeatureBlock, f_focused_intruder_grid, evaluate
-using EncounterSimulation: LinearQValuePolicy
+using EncounterSimulation: LinearQValuePolicy, LinearPostDecisionPolicy
 using GridInterpolations
 # import SVDSHack
 import HDF5, JLD
@@ -333,6 +333,7 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     try
         new_theta = pinv(Phi)*v
     catch e
+        @show rank(Phi)
         println("e")
         JLD.@save "pinv_crash_$(Dates.format(Dates.now(),"u-d_HHMM")).jld" phi theta rm actions num_sims new_phi num_EV rng_seed_offset sims_per_spawn convert_to_sparse parallel state_gen ic_batch
         new_theta = theta
