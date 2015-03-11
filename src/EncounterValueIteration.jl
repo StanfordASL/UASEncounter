@@ -335,7 +335,7 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     catch e
         @show rank(Phi)
         println("e")
-        JLD.@save "pinv_crash_$(Dates.format(Dates.now(),"u-d_HHMM")).jld" phi theta rm actions num_sims new_phi num_EV rng_seed_offset sims_per_spawn convert_to_sparse parallel state_gen ic_batch
+        JLD.@save "pinv_crash_$(Dates.format(Dates.now(),"u-d_HHMM")).jld" phi theta rm actions num_sims new_phi num_EV rng_seed_offset sims_per_spawn convert_to_sparse parallel ic_batch
         new_theta = theta
     end
     if length(new_theta) <= 100
