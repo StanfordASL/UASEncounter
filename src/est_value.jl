@@ -86,7 +86,7 @@ try
              )
     
     try
-        rm("current.value")
+        rm("../data/current.value")
     catch e
         println(e)
         println("continuing anyways...")

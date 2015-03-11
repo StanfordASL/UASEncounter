@@ -5,7 +5,9 @@ using EncounterModel: IntruderParams, OwnshipParams, SimParams, EncounterState, 
 using EncounterFeatures: FeatureBlock, f_focused_intruder_grid, evaluate
 using EncounterSimulation: LinearQValuePolicy
 using GridInterpolations
-import SVDSHack
+# import SVDSHack
+import HDF5, JLD
+import Dates
 
 export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid, find_policy
 
@@ -328,7 +330,13 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     print("$output_prefix inverting... $output_suffix")
     # tic()
 
-    new_theta = pinv(Phi)*v
+    try
+        new_theta = pinv(Phi)*v
+    catch e
+        println("e")
+        JLD.@save "pinv_crash_$(Dates.format(Dates.now(),"u-d_HHMM")).jld" phi theta rm actions num_sims new_phi num_EV rng_seed_offset sims_per_spawn convert_to_sparse parallel state_gen ic_batch
+        new_theta = theta
+    end
     if length(new_theta) <= 100
         @show new_theta
     end
