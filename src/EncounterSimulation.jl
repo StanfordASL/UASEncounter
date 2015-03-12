@@ -30,11 +30,11 @@ type LinearPostDecisionPolicy <: EncounterPolicy
 end
 function query_policy_ind(p::LinearPostDecisionPolicy, state::EncounterState)
     pdvals=Array(PostDecisionState, length(p.actions))
-    for i in 1:length(pds)
+    for i in 1:length(pdvals)
         pd = post_decision_state(state, p.actions[i])
         pdvals[i] = sum(evaluate(p.phi,pd)'*p.theta)
     end
-    return pd
+    return maxind(pdvals)
 end
 function query_policy(p::LinearPostDecisionPolicy, state::EncounterState)
     return p.actions[query_policy_ind(p,state)]

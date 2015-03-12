@@ -103,15 +103,11 @@ function gen_ic_batch_for_grid(rng, intruder_grid, goal_grid)
         ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
         is = [ix, iy, ihead]
         (dnew,bnew,hnew) = ind2x(intruder_grid,i)
-        if dnew <= 0.0
-            dnew+=1e-5
-        end
-        if bnew > pi/2 - 1e-5
-            bnew-=1e-5
-        end
-        if bnew < -pi/2 + 1e-5
-            bnew+=1e-5
-        end
+        if dnew <= 0.0 dnew+=1e-5 end
+        if bnew > pi/2-1e-5 bnew-=1e-5 end
+        if bnew < -pi/2+1e-5 bnew+=1e-5 end
+        if hnew < 1e-5 hnew+=1e-5 end
+        if hnew > 2*pi-1e-5 hnew-=1e-5 end
         os = [is[1]+(dnew+SIM.legal_D)*cos(is[3]+bnew),
               is[2]+(dnew+SIM.legal_D)*sin(is[3]+bnew),
               is[3]+hnew]
@@ -123,15 +119,9 @@ function gen_ic_batch_for_grid(rng, intruder_grid, goal_grid)
     end
     for i in 1:length(goal_grid)
         (dnew,bnew) = ind2x(goal_grid,i)
-        if dnew <= 0.0
-            dnew+=1e-5
-        end
-        if bnew > pi/2 - 1e-5
-            bnew-=1e-5
-        end
-        if bnew < -pi/2 + 1e-5
-            bnew+=1e-5
-        end
+        if dnew <= 0.0 dnew+=1e-5 end
+        if bnew > pi/2-1e-5 bnew-=1e-5 end
+        if bnew < -pi/2+1e-5 bnew+=1e-5 end
         head = 2*pi*rand(rng)
         oxy = SIM.goal_location-(dnew+SIM.goal_radius)*[cos(head+bnew), sin(head+bnew)]
         ix = 1000.0*rand(rng)
@@ -334,7 +324,7 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
         new_theta = pinv(Phi)*v
     catch e
         @show rank(Phi)
-        println("e")
+        println(e)
         JLD.@save "pinv_crash_$(Dates.format(Dates.now(),"u-d_HHMM")).jld" phi theta rm actions num_sims new_phi num_EV rng_seed_offset sims_per_spawn convert_to_sparse parallel ic_batch
         new_theta = theta
     end

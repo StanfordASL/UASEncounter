@@ -1,3 +1,8 @@
+Wed 11 Mar 2015 03:56:45 AM PDT
+morning
+[ ] post-mortem on pinv - why is the batch not making it full rank
+[ ] start pd sims
+
 Mon 09 Mar 2015 09:33:10 PM PDT
 turning is being rediculous. Why?
 
