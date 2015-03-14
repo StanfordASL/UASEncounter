@@ -5,6 +5,7 @@ Still can't beat static trl
 [ ] make policy viewer for pd policies
 [ ] look at some individual simulations
 [ ] Re-parallelize
+[ ] plot the initial conditions
 
 Things to try
 [ ] increase arena size

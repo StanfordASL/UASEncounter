@@ -59,6 +59,7 @@ policies = Array(Any, length(lambdas))
 deviations = Array(Int64, length(lambdas))
 avg_delays = Array(Float64, length(lambdas))
 avg_delays_all = Array(Float64, length(lambdas))
+rms = Array(Any, length(lambdas))
 
 baseline_completion_time = 31
 
@@ -67,8 +68,9 @@ for i in 1:length(lambdas)
     tic()
     lambda = lambdas[i]
     # rm = DeviationAndTimeReward(0, 1, 100, lambda)
-    rm = copy(REWARD)
-    rm.nmac_lambda
+    rm = deepcopy(REWARD)
+    rm.nmac_lambda = lambda
+    rms[i] = rm
     policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID,
                          post_decision=!args["Qvalue"])
     policies[i] = policy
@@ -94,5 +96,5 @@ for i in 1:length(lambdas)
     toc()
 
     @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
-    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args
+    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args rms
 end
