@@ -15,7 +15,7 @@ ArgParse.@add_arg_table s begin
         help = "\"trl\" or \"turning\" actions"
         arg_type = ASCIIString
         default = "turning"
-    "--Qval"
+    "--Qvalue"
         help = "use Q-value policies"
         action = :store_true
 end

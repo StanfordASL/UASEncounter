@@ -302,11 +302,12 @@ features = [
     :f_goal_dist,
     :f_one,
     #XXX
-    # :f_has_deviated,
+    :f_has_deviated, # added 3/13
     ParameterizedFeatureFunction(:f_radial_goal_grid, GOAL_GRID, true),
     ParameterizedFeatureFunction(:f_focused_intruder_grid, INTRUDER_GRID, true),
     :f_conflict,
 ]
+
 const FEATURES = FeatureBlock(features)
 
 # function kaelbling_intruder(state)

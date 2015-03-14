@@ -9,7 +9,7 @@ Still can't beat static trl
 
 Things to try
 [ ] increase arena size
-[ ] penalize deviation
+[X] penalize deviation
 [ ] decrease noise (this probably won't work)
 
 PENALIZING DEVIATION!
