@@ -1,6 +1,9 @@
 Fri 13 Mar 2015 11:58:22 PM PDT
 still weird value - run 50k more!
-
+Tomorrow:
+examine results and see if smoother
+why is pd value lower than -lambda?
+try bigger arena?
 
 Fri 13 Mar 2015 08:25:06 PM PDT
 Turning now performs poorly, but does perform...
