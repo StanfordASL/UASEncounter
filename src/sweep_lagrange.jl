@@ -74,11 +74,12 @@ for i in 1:length(lambdas)
     rm.nmac_lambda = lambda
     rms[i] = rm
     prefs[i] = @spawn find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID, post_decision=!args["Qvalue"], parallel=false, num_short=27, num_long=30)
+    sleep(1)
 end
 
-println("========================")
-println("Done finding policies!")
-println("========================")
+# println("========================")
+# println("Done spawning policies!")
+# println("========================")
 
 for i in 1:length(lambdas)
     lambda=lambdas[i]
