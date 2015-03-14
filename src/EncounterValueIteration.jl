@@ -356,7 +356,11 @@ function extract_pd_policy(phi::FeatureBlock,
     Phi = Array(Float64, num_sims, length(new_theta))
     v = Array(Float64, num_sims)
     for n = 1:num_sims
-        pd = state_gen(rng)
+        if n<=length(ic_batch)
+            pd = ic_batch[n]
+        else
+            pd = state_gen(rng)
+        end
         Phi[n,:] = evaluate(new_phi,pd)
         vn = 0
         for l = 1:num_EV

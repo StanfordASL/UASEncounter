@@ -44,7 +44,7 @@ function plot_value_grid(vals::Array{Float64,2}; extent=(-600.0, 600.0, -100.0, 
     colorbar()
 end
 
-function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship_heading::Float64, n=100; threshold=-1.0)
+function plot_policy_grid(policy::EncounterPolicy, is::IntruderState, ownship_heading::Float64, n=100; threshold=-1.0)
     ymin = -600.0
     ymax = 600.0
     xmin = -100.0
@@ -57,16 +57,19 @@ function plot_policy_grid(policy::LinearQValuePolicy, is::IntruderState, ownship
     for i in 1:n
         for j in 1:n
             state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false)
-            # vals[i,j] = query_policy_ind(policy, state)+1
-            qs=Array(Float64, length(policy.actions))
-            for k in 1:length(qs)
-                qs[k] = sum(evaluate(policy.phi, state)'*policy.thetas[k])
-            end
-            if maximum(qs) - minimum(qs) <= threshold
-                vals[i,j] = 1
-                any_negligible = true
+            if typeof(policy)==LinearQValuePolicy
+                qs=Array(Float64, length(policy.actions))
+                for k in 1:length(qs)
+                    qs[k] = sum(evaluate(policy.phi, state)'*policy.thetas[k])
+                end
+                if maximum(qs) - minimum(qs) <= threshold
+                    vals[i,j] = 1
+                    any_negligible = true
+                else
+                    vals[i,j] = indmax(qs) +1
+                end
             else
-                vals[i,j] = indmax(qs) +1
+                vals[i,j] = query_policy_ind(policy, state)+1
             end
             # vals[i,j] = maximum(qs)-minimum(qs)
         end
