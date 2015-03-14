@@ -1,8 +1,7 @@
 module EncounterSimulation
 
 using EncounterModel
-using EncounterFeatures: FeatureBlock, evaluate
-
+using EncounterFeatures
 export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind, test_policy
 
 abstract EncounterPolicy
@@ -29,12 +28,12 @@ type LinearPostDecisionPolicy <: EncounterPolicy
     theta::Vector{Float64}
 end
 function query_policy_ind(p::LinearPostDecisionPolicy, state::EncounterState)
-    pdvals=Array(PostDecisionState, length(p.actions))
+    pdvals=Array(Float64, length(p.actions))
     for i in 1:length(pdvals)
         pd = post_decision_state(state, p.actions[i])
         pdvals[i] = sum(evaluate(p.phi,pd)'*p.theta)
     end
-    return maxind(pdvals)
+    return indmax(pdvals)
 end
 function query_policy(p::LinearPostDecisionPolicy, state::EncounterState)
     return p.actions[query_policy_ind(p,state)]

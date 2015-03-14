@@ -4,7 +4,7 @@ import Base.hash
 
 export EncounterAction, EncounterState, PostDecisionState, SimParams, IntruderParams, OwnshipParams, IntruderState, OwnshipState, HeadingHRL, BankControl, RewardModel, DeviationAndTimeReward
 export SIM, OWNSHIP, INTRUDER, REWARD
-export dist, mindist, toca, encounter_dynamics, reward, ==, hash
+export dist, mindist, toca, encounter_dynamics, reward, ==, hash, post_decision_state, encounter_dynamics
 export heading_hrl
 
 typealias OwnshipState AbstractVector{Float64}
