@@ -207,7 +207,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     theta = zeros(length(phi))
     snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid, goal_grid)
 
-    for i in 1:
+    for i in 1:num_short
         tic()
         sims_per_policy = 10000
         # println("starting value iteration $i ($sims_per_policy simulations)")
@@ -235,7 +235,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
                             parallel=true,
                             ic_batch=ic_batch,
                             output_prefix="\r[final ($sims_per_policy)]",
-                            output_suffix=""
+                            output_suffix="",
                             parallel=parallel)
         theta = theta_new
         toc()
