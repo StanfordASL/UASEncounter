@@ -63,6 +63,8 @@ rms = Array(Any, length(lambdas))
 
 baseline_completion_time = 31
 
+prefs=Array(Any,length(lambdas))
+
 # i = 1
 for i in 1:length(lambdas)
     tic()
@@ -71,8 +73,21 @@ for i in 1:length(lambdas)
     rm = deepcopy(REWARD)
     rm.nmac_lambda = lambda
     rms[i] = rm
-    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID,
-                         post_decision=!args["Qvalue"])
+    prefs[i] = @spawn find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID,
+                         post_decision=!args["Qvalue"],
+                         parallel=false,
+                         num_short=27,
+                         num_long=30)
+end
+
+println("========================")
+println("Done finding policies!")
+println("========================")
+
+for i in 1:length(lambdas)
+    lambda=lambdas[i]
+    policy=fetch(prefs[i])
+
     policies[i] = policy
 
     col_tests = test_policy(policy, col_ics, col_seeds)   

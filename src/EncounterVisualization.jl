@@ -7,7 +7,7 @@ using EncounterFeatures
 using EncounterSimulation
 # using PGFPlots
 
-export plot_value_grid
+export plot_value_grid, plot_policy_grid, vehicle_arrow
 
 function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100;deviated=false)
     ymin = -600.0
@@ -94,5 +94,17 @@ function plot_policy_grid(policy::EncounterPolicy, is::IntruderState, ownship_he
     ody = 50*sin(ownship_heading)
     ax[:arrow](0,0, ody,odx, head_width=20, head_length=20)
 end
+
+function vehicle_arrow(ax, vs::Array{Float64,1}; scale=20, color="k")
+    ax[:quiver](get_plot_x(vs), get_plot_y(vs), get_plot_u(vs), get_plot_v(vs), scale=scale, color=color)
+end
+
+get_plot_x(state::Array{Float64,1}) = state[2]
+get_plot_y(state::Array{Float64,1}) = state[1]
+get_plot_u(heading::Float64) = cos(2*pi-(heading-pi/2))
+get_plot_u(state::Array{Float64,1}) = get_plot_u(state[3])
+get_plot_v(heading::Float64) = sin(2*pi-(heading-pi/2))
+get_plot_v(state::Array{Float64,1}) = get_plot_v(state[3])
+
 
 end

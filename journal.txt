@@ -1,11 +1,18 @@
+Fri 13 Mar 2015 11:58:22 PM PDT
+still weird value - run 50k more!
+
+
 Fri 13 Mar 2015 08:25:06 PM PDT
 Turning now performs poorly, but does perform...
 Still can't beat static trl
 
-[ ] make policy viewer for pd policies
+[X] make policy viewer for pd policies
 [ ] look at some individual simulations
-[ ] Re-parallelize
-[ ] plot the initial conditions
+    [ ] sim plotter
+[X] Re-parallelize
+[X] plot the initial conditions
+    [X] arrow plotter
+[X] Test random sim
 
 Things to try
 [ ] increase arena size
@@ -13,6 +20,10 @@ Things to try
 [ ] decrease noise (this probably won't work)
 
 PENALIZING DEVIATION!
+
+??? Turning policies still look really bad - increase simulations?
+??? why does pd value function have values lower than in a collision
+NOPE maybe the rng_seed_offset is causing some bias
 
 Thu 12 Mar 2015 01:17:25 AM PDT
 tested and fixed ic batch generation (I think)

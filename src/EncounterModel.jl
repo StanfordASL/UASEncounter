@@ -28,10 +28,12 @@ type HeadingHRL <: EncounterAction
     D_buffered::Float64
     # hrl::Function
 end
+==(u::HeadingHRL,v::HeadingHRL) = u.D_buffered==v.D_buffered
 
 type BankControl <: EncounterAction
     bank::Float64
 end
+==(u::BankControl,v::BankControl) = u.bank==v.bank
 
 type SimParams
     delta_t::Float64
@@ -108,7 +110,7 @@ function ==(u::EncounterState, v::EncounterState)
     elseif u.end_state != v.end_state
         return false
     else
-        return u.os==v.os && u.is == v.is
+        return u.os==v.os && u.is==v.is && u.has_deviated==v.has_deviated
     end
 end
 

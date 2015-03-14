@@ -197,42 +197,49 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
                      actions::Vector{A},
                      intruder_grid::AbstractGrid,
                      goal_grid::AbstractGrid;
-                     post_decision=false)
+                     post_decision=false,
+                     parallel=true,
+                     num_short=30,
+                     num_long=1)
 
     rng0 = MersenneTwister(0)
 
     theta = zeros(length(phi))
     snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid, goal_grid)
 
-    for i in 1:30
+    for i in 1:
         tic()
         sims_per_policy = 10000
         # println("starting value iteration $i ($sims_per_policy simulations)")
         ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
         theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
-                            rng_seed_offset=i,
+                            rng_seed_offset=2048*i,
                             state_gen=snap_generator,
                             parallel=true,
                             ic_batch=ic_batch,
                             output_prefix="\r[$i ($sims_per_policy)]",
-                            output_suffix="")
+                            output_suffix="",
+                            parallel=parallel)
         theta = theta_new
         toc()
     end
 
-    tic()
-    sims_per_policy = 50000
-    # println("starting final value iteration ($sims_per_policy simulations)")
-    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
-    theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
-                        rng_seed_offset=2011,
-                        state_gen=snap_generator,
-                        parallel=true,
-                        ic_batch=ic_batch,
-                        output_prefix="\r[final ($sims_per_policy)]",
-                        output_suffix="")
-    theta = theta_new
-    toc()
+    for j in 1:num_long
+        tic()
+        sims_per_policy = 50000
+        # println("starting final value iteration ($sims_per_policy simulations)")
+        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
+        theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
+                            rng_seed_offset=2011*j,
+                            state_gen=snap_generator,
+                            parallel=true,
+                            ic_batch=ic_batch,
+                            output_prefix="\r[final ($sims_per_policy)]",
+                            output_suffix=""
+                            parallel=parallel)
+        theta = theta_new
+        toc()
+    end
 
     ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
     if post_decision
@@ -242,7 +249,8 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     else
         return extract_policy(phi, theta, rm, actions, 50000,
                             ic_batch=ic_batch,
-                            state_gen=snap_generator)
+                            state_gen=snap_generator,
+                            parallel=parallel)
     end
 end
 
@@ -276,9 +284,9 @@ function iterate{A<:EncounterAction}(phi::FeatureBlock,
     for i in 1:int(num_sims/sims_per_spawn)
         ic_batch_part=ic_batch[(i-1)*sims_per_spawn+1:min(i*sims_per_spawn,length(ic_batch))]
         if parallel
-            push!(refs, @spawn run_sims(new_phi, phi, theta, rm, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
+            push!(refs, @spawn run_sims(new_phi, phi, theta, rm, actions, sims_per_spawn, num_EV, rng_seed_offset+num_sims*i, state_gen=state_gen, ic_batch=ic_batch_part))
         else
-            push!(refs, run_sims(new_phi, phi, theta, rm, actions, sims_per_spawn, num_EV, rng_seed_offset+i, state_gen=state_gen, ic_batch=ic_batch_part))
+            push!(refs, run_sims(new_phi, phi, theta, rm, actions, sims_per_spawn, num_EV, rng_seed_offset+num_sims*i, state_gen=state_gen, ic_batch=ic_batch_part))
             # println("Finished batch $i")
         end
     end
@@ -385,7 +393,8 @@ function extract_policy(phi::FeatureBlock,
                         new_phi=nothing,
                         num_EV::Int=20,
                         state_gen::Function=gen_state, 
-                        ic_batch::Vector{EncounterState}=EncounterState[])
+                        ic_batch::Vector{EncounterState}=EncounterState[],
+                        parallel=true)
 
     if new_phi == nothing
         new_phi = phi
@@ -400,7 +409,8 @@ function extract_policy(phi::FeatureBlock,
                               ic_batch=ic_batch,
                               state_gen=state_gen,
                               output_prefix="\r[$(p.actions[i]) ($num_sims)]",
-                              output_suffix="")
+                              output_suffix="",
+                              parallel=parallel)
     print("\n")
     end
 
