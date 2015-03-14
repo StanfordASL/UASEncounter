@@ -15,8 +15,8 @@ ArgParse.@add_arg_table s begin
         help = "\"trl\" or \"turning\" actions"
         arg_type = ASCIIString
         default = "turning"
-    "--pd"
-        help = "use post decision state policies"
+    "--Qval"
+        help = "use Q-value policies"
         action = :store_true
 end
 
@@ -66,9 +66,11 @@ baseline_completion_time = 31
 for i in 1:length(lambdas)
     tic()
     lambda = lambdas[i]
-    rm = DeviationAndTimeReward(0, 1, 100, lambda)
+    # rm = DeviationAndTimeReward(0, 1, 100, lambda)
+    rm = copy(REWARD)
+    rm.nmac_lambda
     policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID,
-                         post_decision=args["pd"])
+                         post_decision=!args["Qvalue"])
     policies[i] = policy
 
     col_tests = test_policy(policy, col_ics, col_seeds)   
@@ -92,5 +94,5 @@ for i in 1:length(lambdas)
     toc()
 
     @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
-    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all
+    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args
 end
