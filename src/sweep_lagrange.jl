@@ -75,7 +75,7 @@ for i in 1:length(lambdas)
     rms[i] = rm
 
 # ======== FINE
-    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID, post_decision=!args["Qvalue"], parallel=true, num_short=27, num_long=3)
+    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID, post_decision=!args["Qvalue"], parallel=true)
 # ========
 
 # ======== COARSE

@@ -93,7 +93,7 @@ function evaluate(block::FeatureBlock, state::EncounterState; memory::AbstractVe
     # elseif length(memory)==0
     #     b = spzeros(sum([a.length for a in blocks]),1)
     end
-    if end_state
+    if state.end_state
         b[:] = 0
         return b
     end

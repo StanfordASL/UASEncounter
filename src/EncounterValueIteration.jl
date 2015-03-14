@@ -206,18 +206,18 @@ function find_value{A<:EncounterAction}(phi::FeatureBlock,
     theta = zeros(length(phi))
     snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid, goal_grid)
 
-    for i in 1:num_short
+    for i in 1:length(iters)
         tic()
-        sims_per_policy = 10000
+        # sims_per_policy = 10000
         # println("starting value iteration $i ($sims_per_policy simulations)")
         ic_batch = [gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid),
-                    gen_undeviated_ic_batch(rng0, intruder_grid, 500)]
-        theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
+                    gen_undeviated_ic_batch(rng0, intruder_grid, num=200)]
+        theta_new = iterate(phi, theta, rm, actions, iters[i],
                             rng_seed_offset=2048*i,
                             state_gen=snap_generator,
                             parallel=true,
                             ic_batch=ic_batch,
-                            output_prefix="\r[$i ($sims_per_policy)]",
+                            output_prefix="\r[$i ($(iters[i]))]",
                             output_suffix="",
                             parallel=parallel)
         theta = theta_new
@@ -234,7 +234,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
                      goal_grid::AbstractGrid;
                      post_decision=false,
                      parallel=true,
-                     iters=[30000*ones(Int64,29),50000])
+                     iters=[10000*ones(Int64,29),50000])
 
     theta = find_value(phi, rm, actions, intruder_grid, goal_grid,
                        post_decision=post_decision,
@@ -244,7 +244,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     rng = MersenneTwister(1876)
 
     ic_batch = [gen_ic_batch_for_grid(rng, intruder_grid,goal_grid),
-                gen_undeviated_ic_batch(rng, intruder_grid, 500)]
+                gen_undeviated_ic_batch(rng, intruder_grid, num=200)]
     if post_decision
         return extract_pd_policy(phi, theta, actions, 50000,
                             ic_batch=ic_batch,
