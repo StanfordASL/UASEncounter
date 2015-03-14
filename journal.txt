@@ -1,8 +1,40 @@
+Sat 14 Mar 2015 11:13:18 AM PDT
+turning error seemed to be out of memory
+
+[X] add reward
+[ ] generate some states on the path
+[ ] only generate deviated states otherwise
+[ ] make something to view simulations
+
+Sat 14 Mar 2015 09:08:17 AM PDT
+results of sims last night trl Q values: 3x50k does not clean up
+error in turning?
+
+[X] check on turning error
+[ ] add reward to pd policy evaluation!
+[ ] check on "pixels" in collision zone in pd policy
+[ ] think about pd features
+
+running time - fine par, PD ~= 2330-2115 = 194
+coarse par, Q ~= 0325-0040 = 285
+
+bigger arena?
+
 Fri 13 Mar 2015 11:58:22 PM PDT
+result of sims tonight: trl does better in terms of delay - barely
 still weird value - run 50k more!
+starting turning sims with 3x50k at the end using Qvalues
+starting trlmatch with 3x50k at the end
+
+Weird - if I use -p 6 with coarse discretization, don't get very good processer utilization
+
+Why is pd lower than being in the collision circle? because of weird feature interactions?
+Because! it is near -lambda! in the circle, it might leave, so it is not actually as bad, lol
+look at bertsekas
+when evaluating the policy, need to take reward of action into account!!
+
 Tomorrow:
 examine results and see if smoother
-why is pd value lower than -lambda?
 try bigger arena?
 
 Fri 13 Mar 2015 08:25:06 PM PDT
@@ -22,7 +54,7 @@ Things to try
 [X] penalize deviation
 [ ] decrease noise (this probably won't work)
 
-PENALIZING DEVIATION!
+sims I Started now use pd policies and penalize deviation
 
 ??? Turning policies still look really bad - increase simulations?
 ??? why does pd value function have values lower than in a collision

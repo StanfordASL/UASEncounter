@@ -73,17 +73,24 @@ for i in 1:length(lambdas)
     rm = deepcopy(REWARD)
     rm.nmac_lambda = lambda
     rms[i] = rm
-    prefs[i] = @spawn find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID, post_decision=!args["Qvalue"], parallel=true, num_short=27, num_long=3)
-    sleep(1)
-end
 
-# println("========================")
-# println("Done spawning policies!")
-# println("========================")
+# ======== FINE
+    policy = find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID, post_decision=!args["Qvalue"], parallel=true, num_short=27, num_long=3)
+# ========
 
-for i in 1:length(lambdas)
-    lambda=lambdas[i]
-    policy=fetch(prefs[i])
+# ======== COARSE
+#     prefs[i] = @spawn find_policy(phi, rm, actions, INTRUDER_GRID, GOAL_GRID, post_decision=!args["Qvalue"], parallel=false, num_short=27, num_long=3)
+#     sleep(1)
+# end
+# 
+# # println("========================")
+# # println("Done spawning policies!")
+# # println("========================")
+# 
+# for i in 1:length(lambdas)
+#     lambda=lambdas[i]
+#     policy=fetch(prefs[i])
+# ========
 
     policies[i] = policy
 

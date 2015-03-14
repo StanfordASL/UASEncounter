@@ -11,7 +11,7 @@ import Dates
 
 export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid, find_policy
 
-function gen_state(rng::AbstractRNG)
+function gen_state(rng::AbstractRNG; has_deviated=nothing)
     ix = 1000.0*rand(rng)
     iy = 2000.0*(rand(rng)-0.5)
     ihead = (iy > 0.0 ? -pi*rand(rng) : pi*rand(rng))
@@ -23,7 +23,9 @@ function gen_state(rng::AbstractRNG)
     oy = 1000.0*(rand(rng)-0.5)
     ohead = 2*pi*rand(rng) 
 
-    has_deviated = rand(rng) >= 0.5
+    if has_deviated==nothing
+        has_deviated = rand(rng) >= 0.5
+    end
 
     return EncounterState([ox,oy,ohead],[ix, iy, ihead],false,has_deviated)
 end
@@ -90,7 +92,7 @@ function snap_is_to_intruder_grid(state::EncounterState, intruder_grid)
 end
 
 function gen_state_snap_to_grid(rng::AbstractRNG, intruder_grid, goal_grid)
-    state=gen_state(rng)
+    state=gen_state(rng, has_deviated=true)
     return snap_is_to_intruder_grid(snap_os_to_goal_grid(state, goal_grid),intruder_grid)
 end
 
@@ -135,15 +137,23 @@ function gen_ic_batch_for_grid(rng, intruder_grid, goal_grid)
     return ics
 end
 
+function gen_undeviated_ic_batch(rng::AbstractRNG, intruder_grid; num=500)
+    ics = Array(EncounterState, num)
+    for n in 1:num
+        s = gen_state(rng)
+        x = (SIM.goal_location[1]-SIM.goal_radius)*rand(rng)
+        s.os = [x,0.0,0.0]
+        s.has_deviated=false
+        ics[n] = snap_is_to_intruder_grid(s, intruder_grid)
+    end
+    return ics
+end
+
 function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVector{Float64}, rm::RewardModel, actions, N::Int, NEV::Int, rng_seed::Int; state_gen::Function=gen_state, ic_batch::Vector{EncounterState}=EncounterState[])
     has_data = Set{Int64}()
     phis = Any[]
     v = Array(Float64, N)
     rng = MersenneTwister(rng_seed)
-
-    # XXX
-    # gc()
-    # gc_disable()
 
     for n in 1:N
         if n <= length(ic_batch)
@@ -168,23 +178,11 @@ function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVecto
             end
         end
 
-        # # XXX
-        # if mod(n, 50) == 0
-        #     gc_enable()
-        #     gc()
-        #     gc_disable()
-        # end
-
         v[n] = maximum(rewards + v_sums/NEV)
 
         feat = evaluate(new_phi,sn)
         push!(phis, feat)
 
-        # if new_phi.dense
-        #     J = find(feat)        
-        # else
-        #     (J, dummy, dummy2) = findnz(feat)
-        # end
         J = find(feat)        
         union!(has_data, J)
     end
@@ -192,15 +190,16 @@ function run_sims(new_phi::FeatureBlock, phi::FeatureBlock, theta::AbstractVecto
     return (phis, has_data, v)
 end
 
-function find_policy{A<:EncounterAction}(phi::FeatureBlock,
+
+
+function find_value{A<:EncounterAction}(phi::FeatureBlock,
                      rm::RewardModel,
                      actions::Vector{A},
                      intruder_grid::AbstractGrid,
                      goal_grid::AbstractGrid;
                      post_decision=false,
                      parallel=true,
-                     num_short=30,
-                     num_long=1)
+                     iters=[30000*ones(Int64,29),50000])
 
     rng0 = MersenneTwister(0)
 
@@ -211,7 +210,8 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
         tic()
         sims_per_policy = 10000
         # println("starting value iteration $i ($sims_per_policy simulations)")
-        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
+        ic_batch = [gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid),
+                    gen_undeviated_ic_batch(rng0, intruder_grid, 500)]
         theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
                             rng_seed_offset=2048*i,
                             state_gen=snap_generator,
@@ -224,24 +224,27 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
         toc()
     end
 
-    for j in 1:num_long
-        tic()
-        sims_per_policy = 50000
-        # println("starting final value iteration ($sims_per_policy simulations)")
-        ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
-        theta_new = iterate(phi, theta, rm, actions, sims_per_policy,
-                            rng_seed_offset=2011*j,
-                            state_gen=snap_generator,
-                            parallel=true,
-                            ic_batch=ic_batch,
-                            output_prefix="\r[final ($sims_per_policy)]",
-                            output_suffix="",
-                            parallel=parallel)
-        theta = theta_new
-        toc()
-    end
+    return theta
+end
 
-    ic_batch = gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid)
+function find_policy{A<:EncounterAction}(phi::FeatureBlock,
+                     rm::RewardModel,
+                     actions::Vector{A},
+                     intruder_grid::AbstractGrid,
+                     goal_grid::AbstractGrid;
+                     post_decision=false,
+                     parallel=true,
+                     iters=[30000*ones(Int64,29),50000])
+
+    theta = find_value(phi, rm, actions, intruder_grid, goal_grid,
+                       post_decision=post_decision,
+                       parallel=parallel,
+                       iters=iters)
+
+    rng = MersenneTwister(1876)
+
+    ic_batch = [gen_ic_batch_for_grid(rng, intruder_grid,goal_grid),
+                gen_undeviated_ic_batch(rng, intruder_grid, 500)]
     if post_decision
         return extract_pd_policy(phi, theta, actions, 50000,
                             ic_batch=ic_batch,

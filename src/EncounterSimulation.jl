@@ -26,12 +26,13 @@ type LinearPostDecisionPolicy <: EncounterPolicy
     phi::FeatureBlock
     actions::Vector{EncounterAction}
     theta::Vector{Float64}
+    rm::RewardModel
 end
 function query_policy_ind(p::LinearPostDecisionPolicy, state::EncounterState)
     pdvals=Array(Float64, length(p.actions))
     for i in 1:length(pdvals)
         pd = post_decision_state(state, p.actions[i])
-        pdvals[i] = sum(evaluate(p.phi,pd)'*p.theta)
+        pdvals[i] = reward(state, p.actions[i]) + sum(evaluate(p.phi,pd)'*p.theta)
     end
     return indmax(pdvals)
 end
