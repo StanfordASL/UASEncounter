@@ -245,7 +245,7 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
     ic_batch = [gen_ic_batch_for_grid(rng, intruder_grid,goal_grid),
                 gen_undeviated_ic_batch(rng, intruder_grid, num=200)]
     if post_decision
-        return extract_pd_policy(phi, theta, actions, 50000,
+        return extract_pd_policy(phi, theta, rm, actions, 50000,
                             ic_batch=ic_batch,
                             state_gen=snap_generator)
     else
@@ -348,6 +348,7 @@ end
 
 function extract_pd_policy(phi::FeatureBlock,
                             theta::AbstractVector{Float64},
+                            rm::RewardModel,
                             actions::Vector{EncounterAction},
                             num_sims::Int;
                             new_phi=nothing,
