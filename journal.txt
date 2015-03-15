@@ -6,6 +6,8 @@ First thing: fix delay time metric to not look at collisions
 Things that I could focus on:
 1. Post decision features
 2. Finding a problem that things work well on
+    Changing intruder initial conditions to not be so likely to hit (so that the static gets more false positives
+    limiting the intruder grid
 3. UCT
 4. Making turning work
 

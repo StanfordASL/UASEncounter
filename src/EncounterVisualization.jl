@@ -44,19 +44,20 @@ function plot_value_grid(vals::Array{Float64,2}; extent=(-600.0, 600.0, -100.0, 
     colorbar()
 end
 
-function plot_policy_grid(policy::EncounterPolicy, is::IntruderState, ownship_heading::Float64, n=100; threshold=-1.0)
-    ymin = -600.0
-    ymax = 600.0
-    xmin = -100.0
-    xmax = 1100.0
-    extent = (ymin, ymax, xmin, xmax)
+function plot_policy_grid(policy::EncounterPolicy, is::IntruderState, ownship_heading::Float64, n=100; threshold=-1.0, extent=(-600.0, 600.0, -100.0, 1100.0), has_deviated=false)
+    # ymin = -600.0
+    # ymax = 600.0
+    # xmin = -100.0
+    # xmax = 1100.0
+    (ymin, ymax, xmin, xmax) = extent
+    # extent = (ymin, ymax, xmin, xmax)
     xpoints = linspace(xmin, xmax, n)
     ypoints = linspace(ymin, ymax, n)
     vals = Array(Float64, n, n)
     any_negligible = false
     for i in 1:n
         for j in 1:n
-            state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false)
+            state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, has_deviated)
             if typeof(policy)==LinearQValuePolicy
                 qs=Array(Float64, length(policy.actions))
                 for k in 1:length(qs)

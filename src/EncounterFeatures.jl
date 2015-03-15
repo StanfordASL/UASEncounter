@@ -116,6 +116,7 @@ end
 function f_focused_intruder_grid(state, grid::AbstractGrid; memory::AbstractVector{Float64}=Float64[])
     # phi = spzeros(length(grid), 1)
     phi = memory
+    phi[:]=0
     if length(memory)==0
         phi = zeros(length(grid))
     end
@@ -126,7 +127,11 @@ function f_focused_intruder_grid(state, grid::AbstractGrid; memory::AbstractVect
     is = state.is
     os = state.os
 
-    d = min(norm(os[1:2]-is[1:2])-SIM.legal_D, maximum(grid.cutPoints[1]))
+    # d = min(norm(os[1:2]-is[1:2])-SIM.legal_D, maximum(grid.cutPoints[1]))
+    d = norm(os[1:2]-is[1:2])-SIM.legal_D
+    if d > 1.00005*maximum(grid.cutPoints[1])
+        return phi
+    end
 
     # bearing to ownship from intruder's perspective
     bearing = atan2(os[2]-is[2], os[1]-is[1]) - is[3]
@@ -220,6 +225,7 @@ end
 function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Float64}=Float64[])
     # phi = spzeros(length(grid),1)
     phi = memory
+    phi[:]=0
     if length(memory)==0
         phi = zeros(length(grid))
     end
@@ -229,9 +235,9 @@ function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Fl
     end
     os = state.os
 
-    d = min(norm(os[1:2]-SIM.goal_location)-SIM.goal_radius, maximum(grid.cutPoints[1]))
-
-    if d <= 0.0
+    # d = min(norm(os[1:2]-SIM.goal_location)-SIM.goal_radius, maximum(grid.cutPoints[1]))
+    d = norm(os[1:2]-SIM.goal_location)-SIM.goal_radius
+    if d <= 0.0 || d > maximum(grid.cutPoints[1])
         return phi
     end
 
