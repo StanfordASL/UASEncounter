@@ -197,7 +197,6 @@ function find_value{A<:EncounterAction}(phi::FeatureBlock,
                      actions::Vector{A},
                      intruder_grid::AbstractGrid,
                      goal_grid::AbstractGrid;
-                     post_decision=false,
                      parallel=true,
                      iters=[30000*ones(Int64,29),50000])
 
@@ -237,11 +236,11 @@ function find_policy{A<:EncounterAction}(phi::FeatureBlock,
                      iters=[10000*ones(Int64,29),50000])
 
     theta = find_value(phi, rm, actions, intruder_grid, goal_grid,
-                       post_decision=post_decision,
                        parallel=parallel,
                        iters=iters)
 
     rng = MersenneTwister(1876)
+    snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid, goal_grid)
 
     ic_batch = [gen_ic_batch_for_grid(rng, intruder_grid,goal_grid),
                 gen_undeviated_ic_batch(rng, intruder_grid, num=200)]
@@ -384,7 +383,7 @@ function extract_pd_policy(phi::FeatureBlock,
     println("inverting...")
     new_theta=pinv(Phi)*v
 
-    return LinearPostDecisionPolicy(new_phi, actions, new_theta)
+    return LinearPostDecisionPolicy(new_phi, actions, new_theta, rm)
 
 end
 
