@@ -57,7 +57,7 @@ function plot_policy_grid(policy::EncounterPolicy, is::IntruderState, ownship_he
     any_negligible = false
     for i in 1:n
         for j in 1:n
-            state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, has_deviated)
+            state = EncounterState([xpoints[i], ypoints[j], ownship_heading], is, false, has_deviated)
             if typeof(policy)==LinearQValuePolicy
                 qs=Array(Float64, length(policy.actions))
                 for k in 1:length(qs)

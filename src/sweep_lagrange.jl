@@ -28,7 +28,8 @@ a_arg = args["a"]
 # @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
 if a_arg == "turning"
     @show actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
-    lambdas = logspace(3,7,6)
+    # lambdas = logspace(3,7,6)
+    lambdas = logspace(1,5,8)
 elseif a_arg == "trl"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
@@ -36,7 +37,7 @@ elseif a_arg == "trl"
 elseif a_arg == "trlmatch"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.3*lD]]
-    lambdas = logspace(3,5,5)
+    lambdas = logspace(1,5,8)
 else
     error("Invalid -a input. Expected \"trl\" or \"turning\"; got \"$a_arg\"")
 end

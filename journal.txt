@@ -1,3 +1,13 @@
+Mon 16 Mar 2015 10:36:36 PM PDT
+Immediate questions:
+1. Why are trl values all bunched up?
+[ ] decrease min lambda
+2. Why is turning so bad
+[ ] look at individual sims
+[ ] decrease min lambda
+
+[ ] change initial conditions
+
 Sat 14 Mar 2015 04:18:16 PM PDT
 "pixelation" in pd policy is perhaps because it is reading from random memory
 
