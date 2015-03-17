@@ -5,10 +5,10 @@ import Dates
 
 @show filename = "../data/D_bisection_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
 
-ic_filename = "../data/10k_collisions.ic"
+ic_filename = "../data/box_10k_collisions.ic"
 ic_data = JLD.load(ic_filename)
 
-m_ic_fname = "../data/10k_mixed.ic"
+m_ic_fname = "../data/box_10k_mixed.ic"
 mixed_data = JLD.load(m_ic_fname)
 
 mixed_ics = mixed_data["ics"]
