@@ -37,8 +37,9 @@ if a_arg == "turning"
     iters = 50000*ones(Int64,35)
 elseif a_arg == "trl"
     lD = SIM.legal_D
-    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
-    lambdas = logspace(2,5,6)
+    # @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
+    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.2*lD, 1.5*lD, 2.0*lD]]
+    lambdas = logspace(1.8,4,5)
 elseif a_arg == "trlmatch"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.3*lD]]
