@@ -1,12 +1,27 @@
+Tue 17 Mar 2015 05:01:26 PM PDT
+[ ] get rid of ripples
+    [ ] symmetry
+    [ ] try an individual value iteration run
+[ ] get rid of bunching
+    [X] look at extent of conservative zone for high lambda
+        looks like this is the problem
+
+[X] find zeros bug
+[ ] Change to 500 ft NMAC
+[ ] symmetry
+[ ] expand grid
+[ ] start more limited box
+[ ] run turning a bunch
+
 Mon 16 Mar 2015 10:36:36 PM PDT
 Immediate questions:
 1. Why are trl values all bunched up?
-[ ] decrease min lambda
+[X] decrease min lambda
 2. Why is turning so bad
-[ ] look at individual sims
+[X] look at individual sims
 [ ] decrease min lambda
 
-[ ] change initial conditions
+[X] change initial conditions
 
 Sat 14 Mar 2015 04:18:16 PM PDT
 "pixelation" in pd policy is perhaps because it is reading from random memory

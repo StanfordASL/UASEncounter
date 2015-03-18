@@ -81,11 +81,13 @@ function plot_policy_grid(policy::EncounterPolicy, is::IntruderState, ownship_he
     xlabel("y (east)")
     ylabel("x (north)")
     # colorbar()
-    cbar = colorbar(ticks=[1:length(policy.actions)+1])
-    if any_negligible
-        cbar[:ax][:set_yticklabels](["Negligible Difference", [string(a) for a in policy.actions]])
-    else
-        cbar[:ax][:set_yticklabels]([string(a) for a in policy.actions])
+    if length(unique(vals)) > 1
+        cbar = colorbar(ticks=[1:length(policy.actions)+1])
+        if any_negligible
+            cbar[:ax][:set_yticklabels](["Negligible Difference", [string(a) for a in policy.actions]])
+        else
+            cbar[:ax][:set_yticklabels]([string(a) for a in policy.actions])
+        end
     end
     ax=gca()
     idx = 50*cos(is[3])

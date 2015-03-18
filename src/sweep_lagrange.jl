@@ -8,6 +8,8 @@ import ArgParse
 import HDF5, JLD
 import Dates
 
+using Debug
+
 s = ArgParse.ArgParseSettings()
 
 ArgParse.@add_arg_table s begin
@@ -31,7 +33,8 @@ if a_arg == "turning"
     @show actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
     # lambdas = logspace(3,7,6)
     lambdas = logspace(1,5,8)
-    iters=[10000*ones(Int64,59),50000]
+    # iters=[10000*ones(Int64,59),50000]
+    iters = [10000]
 elseif a_arg == "trl"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
@@ -109,11 +112,16 @@ for i in 1:length(lambdas)
     # deviation_tests = filter(t->t.output.deviated, tests)
 
     mixed_tests = test_policy(policy, mixed_ics, mixed_seeds)
+
     deviations[i] = sum([t.output.deviated for t in mixed_tests])
     dev_no_nmac(t) = t.output.deviated && !t.output.nmac
     dev_tests = filter(dev_no_nmac, mixed_tests)
     # @show [t.output.steps_before_end-baseline_completion_time for t in dev_tests]
-    avg_delays[i] = mean([t.output.steps_before_end-baseline_completion_time for t in dev_tests])
+    if length(dev_tests) > 0
+        avg_delays[i] = mean([t.output.steps_before_end-baseline_completion_time for t in dev_tests])
+    else
+        avg_delays[i] = 0.0
+    end
     avg_delays_all[i] = mean([t.output.steps_before_end-baseline_completion_time for t in mixed_tests])
 
     @show lambda
