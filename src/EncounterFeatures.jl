@@ -262,6 +262,42 @@ function f_radial_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Fl
     return phi
 end
 
+function f_symmetric_goal_grid(state, grid::AbstractGrid; memory::AbstractVector{Float64}=Float64[])
+    phi = memory
+    phi[:]=0
+    if length(memory)==0
+        phi = zeros(length(grid))
+    end
+
+    if state.end_state
+        return phi
+    end
+    os = state.os
+
+    d = norm(os[1:2]-SIM.goal_location)-SIM.goal_radius
+    if d <= 0.0 || d > maximum(grid.cutPoints[1])
+        return phi
+    end
+
+    heading = atan2(SIM.goal_location[2]-os[2], SIM.goal_location[1]-os[1])
+    if heading <= 0.0 heading += 2*pi end # heading now 0 to 2*pi
+    bearing = abs(heading-os[3])
+    # while bearing < -pi bearing += 2*pi end
+    while bearing > pi bearing -= 2*pi end
+
+    inds, weights = interpolants(grid, [d, bearing])
+    # if maximum(weights) < 0.95
+    #     @show state
+    #     @show d,heading,bearing
+    #     @show ind2x(grid, inds[indmax(weights)])
+    # end
+
+    for i in 1:length(inds)
+        phi[inds[i]] = weights[i]
+    end
+    return phi
+end
+
 function f_has_deviated(state::EncounterState)
     return convert(Float64, state.has_deviated)
 end
@@ -298,8 +334,12 @@ function f_one(state::EncounterState)
     return convert(Float64, !state.end_state)
 end
 
+# goal_dist_points = linspace(0.0, 500.0, 10)
+# goal_bearing_points = linspace(-pi, pi, 15)
+# const GOAL_GRID = RectangleGrid(goal_dist_points, goal_bearing_points)
+# # changed to symmetric on Mar 17
 goal_dist_points = linspace(0.0, 500.0, 10)
-goal_bearing_points = linspace(-pi, pi, 15)
+goal_bearing_points = linspace(0, pi, 8)
 const GOAL_GRID = RectangleGrid(goal_dist_points, goal_bearing_points)
 
 intruder_dist_points = linspace(0.0, 700.0, 12) 
@@ -313,7 +353,7 @@ features = [
     :f_one,
     #XXX
     :f_has_deviated, # added 3/13
-    ParameterizedFeatureFunction(:f_radial_goal_grid, GOAL_GRID, true),
+    ParameterizedFeatureFunction(:f_symmetric_goal_grid, GOAL_GRID, true),
     ParameterizedFeatureFunction(:f_focused_intruder_grid, INTRUDER_GRID, true),
     :f_conflict,
 ]

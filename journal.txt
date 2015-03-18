@@ -7,8 +7,8 @@ Tue 17 Mar 2015 05:01:26 PM PDT
         looks like this is the problem
 
 [X] find zeros bug
-[ ] Change to 500 ft NMAC
-[ ] symmetry
+[X] Change to 500 ft NMAC
+[X] symmetry
 [ ] expand grid
 [ ] start more limited box
 [ ] run turning a bunch
