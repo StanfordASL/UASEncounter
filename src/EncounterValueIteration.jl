@@ -198,7 +198,8 @@ function find_value{A<:EncounterAction}(phi::FeatureBlock,
                      intruder_grid::AbstractGrid,
                      goal_grid::AbstractGrid;
                      parallel=true,
-                     iters=[10000*ones(Int64,29),50000])
+                     iters=[10000*ones(Int64,29),50000],
+                     plot=false)
 
     rng0 = MersenneTwister(0)
 

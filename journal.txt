@@ -9,7 +9,7 @@ Tue 17 Mar 2015 05:01:26 PM PDT
 [X] find zeros bug
 [X] Change to 500 ft NMAC
 [X] symmetry
-[ ] expand grid
+[X] expand grid
 [ ] start more limited box
 [ ] run turning a bunch
 

@@ -342,7 +342,8 @@ goal_dist_points = linspace(0.0, 500.0, 10)
 goal_bearing_points = linspace(0, pi, 8)
 const GOAL_GRID = RectangleGrid(goal_dist_points, goal_bearing_points)
 
-intruder_dist_points = linspace(0.0, 700.0, 12) 
+# intruder_dist_points = linspace(0.0, 700.0, 12) # expanded on Mar 17
+intruder_dist_points = [0.,60.,120.,180.,240.,300.,400.,500.,600.,700.,800.,1000.]
 intruder_bearing_points = linspace(-pi/2, pi/2, 12)
 intruder_heading_points = linspace(0.0, 2*pi, 12)
 const INTRUDER_GRID = RectangleGrid(intruder_dist_points, intruder_bearing_points, intruder_heading_points)
