@@ -9,7 +9,7 @@ using GridInterpolations
 import HDF5, JLD
 import Dates
 
-export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid, find_policy
+export run_sims, iterate, extract_policy, gen_state_snap_to_grid, gen_ic_batch_for_grid, find_policy, gen_undeviated_ic_batch
 
 function gen_state(rng::AbstractRNG; has_deviated=nothing)
     ix = 1000.0*rand(rng)
@@ -121,9 +121,11 @@ function gen_ic_batch_for_grid(rng, intruder_grid, goal_grid)
     end
     for i in 1:length(goal_grid)
         (dnew,bnew) = ind2x(goal_grid,i)
-        if dnew <= 0.0 dnew+=1e-5 end
-        if bnew > pi/2-1e-5 bnew-=1e-5 end
-        if bnew < -pi/2+1e-5 bnew+=1e-5 end
+        dnew-=1e-5
+        if dnew <= 0.0 dnew+=2e-5 end
+        if rand(rng) > 0.5 bnew = -bnew end # randomize for symmetric
+        if bnew > pi-1e-5 bnew-=1e-5 end
+        if bnew < -pi+1e-5 bnew+=1e-5 end
         head = 2*pi*rand(rng)
         oxy = SIM.goal_location-(dnew+SIM.goal_radius)*[cos(head+bnew), sin(head+bnew)]
         ix = 1000.0*rand(rng)

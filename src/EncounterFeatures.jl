@@ -13,7 +13,7 @@ export ParameterizedFeatureBlock, ParameterizedFeatureFunction
 export evaluate
 export FeatureBlock
 export GOAL_GRID, INTRUDER_GRID, FEATURES
-export f_in_goal, f_mindist_time, f_one_over_mindist_time, f_exp_neg_mindist, f_exp_neg_dist, f_one_over_mindist, f_one_over_dist, f_intruder_dist, f_one, f_goal_dist, f_abs_goal_bearing, f_radial_intruder_grid, f_radial_goal_grid, f_exp_neg_goal_dist, f_within_goal_dist, f_conflict, f_focused_intruder_grid, f_half_intruder_bin_grid, f_has_deviated
+export f_in_goal, f_mindist_time, f_one_over_mindist_time, f_exp_neg_mindist, f_exp_neg_dist, f_one_over_mindist, f_one_over_dist, f_intruder_dist, f_one, f_goal_dist, f_abs_goal_bearing, f_radial_intruder_grid, f_radial_goal_grid, f_exp_neg_goal_dist, f_within_goal_dist, f_conflict, f_focused_intruder_grid, f_half_intruder_bin_grid, f_has_deviated, f_symmetric_goal_grid
 
 type FeatureBlock
     members::Vector{Any}
@@ -281,9 +281,10 @@ function f_symmetric_goal_grid(state, grid::AbstractGrid; memory::AbstractVector
 
     heading = atan2(SIM.goal_location[2]-os[2], SIM.goal_location[1]-os[1])
     if heading <= 0.0 heading += 2*pi end # heading now 0 to 2*pi
-    bearing = abs(heading-os[3])
-    # while bearing < -pi bearing += 2*pi end
+    bearing = heading-os[3]
+    while bearing < -pi bearing += 2*pi end
     while bearing > pi bearing -= 2*pi end
+    bearing = abs(bearing)
 
     inds, weights = interpolants(grid, [d, bearing])
     # if maximum(weights) < 0.95

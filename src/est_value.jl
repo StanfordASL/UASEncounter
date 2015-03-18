@@ -1,13 +1,12 @@
-@everywhere using EncounterModel
-# @everywhere using WHack
-@everywhere using EncounterFeatures
-@everywhere using GridInterpolations
-@everywhere using EncounterValueIteration
+using EncounterModel
+using EncounterFeatures
+using GridInterpolations
+using EncounterValueIteration
 import EncounterVisualization
 import HDF5, JLD
 import Dates
 
-@everywhere phi = FEATURES
+phi = FEATURES
 
 # @show phi.description
 @show file_prefix = "turning_test"
@@ -27,22 +26,22 @@ rew = REWARD
 rng0 = MersenneTwister(0)
 
 theta = zeros(length(phi))
-snap_generator(rng) = gen_state_snap_to_grid(rng, intruder_grid, goal_grid)
+snap_generator(rng) = gen_state_snap_to_grid(rng, INTRUDER_GRID, GOAL_GRID)
 
 iters = 50000*ones(Int64,30)
 
 for i in 1:length(iters)
     tic()
-    ic_batch = [gen_ic_batch_for_grid(rng0, intruder_grid,goal_grid),
-                gen_undeviated_ic_batch(rng0, intruder_grid, num=200)]
-    theta_new = iterate(phi, theta, rm, actions, iters[i],
+    ic_batch = [gen_ic_batch_for_grid(rng0, INTRUDER_GRID,GOAL_GRID),
+                gen_undeviated_ic_batch(rng0, INTRUDER_GRID, num=200)]
+    theta_new = iterate(phi, theta, rew, actions, iters[i],
                         rng_seed_offset=2048*i,
                         state_gen=snap_generator,
                         parallel=true,
                         ic_batch=ic_batch,
                         output_prefix="\r[$i ($(iters[i]))]",
                         output_suffix="",
-                        parallel=parallel)
+                        parallel=true)
     theta = theta_new
 
     EncounterVisualization.plot_value_grid(phi, theta, plot_is, plot_heading) 
@@ -50,8 +49,9 @@ for i in 1:length(iters)
     toc()
 end
 
+@show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
 
-
+JLD.@save filename phi theta 
 
 # theta = find_value(phi, rew, actions, INTRUDER_GRID, GOAL_GRID, parallel=true, iters=50000*ones(Int64,30))
 
