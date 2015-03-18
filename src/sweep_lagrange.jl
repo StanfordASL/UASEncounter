@@ -31,9 +31,10 @@ if a_arg == "turning"
     @show actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
     # lambdas = logspace(3,7,6)
     # lambdas = logspace(1,5,8)
-    lambdas = logspace(2,4,4)
+    # lambdas = logspace(2,4,4)
+    lambdas = [200, 400, 550, 700]
     # iters=[10000*ones(Int64,59),50000]
-    iters = 30000*ones(Int64,30)
+    iters = 50000*ones(Int64,35)
 elseif a_arg == "trl"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
