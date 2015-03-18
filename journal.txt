@@ -1,10 +1,17 @@
+Wed 18 Mar 2015 12:11:32 PM PDT
+Big things left to do
+1. Why aren't the static TRL points all on the Paretto frontier
+2. Specific classes of cases where this performs better
+3. Run with different noise values
+4. Write
+
 Wed 18 Mar 2015 10:40:45 AM PDT
 Ripples definitely gone with 50k sims, probably also with 30k
 extending the grid helps extend the curve - still bunching at the very end
 
 [X] regenerate initial conditions
-[ ] run turning with tighter range of lambda
-[ ] run trl with larger action set
+[X] run turning with tighter range of lambda
+[X] run trl with larger action set
 
 Tue 17 Mar 2015 05:01:26 PM PDT
 [X] get rid of ripples

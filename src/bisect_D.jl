@@ -19,7 +19,7 @@ ics = ic_data["ics"]
 seeds = ic_data["seeds"]
 
 max_D = 1000.0
-min_D = 100.0
+min_D = 0.0
 target_rr = 0.05
 sims_per_iter = 10000
 

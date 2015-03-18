@@ -152,7 +152,7 @@ function run!(test::EncounterTest; announce=false, store_hist=true)
         end
         s = getNextState(s,a,rng)
 
-        if dist(s) <= test.input.sim.legal_D
+        if !s.end_state && dist(s) <= test.input.sim.legal_D
             test.output.nmac = true
         end
         if s.has_deviated
@@ -193,12 +193,12 @@ function run!(tests::Vector{EncounterTest}; store_hist=true, parallel=false, bat
     return tests
 end
 
-function test_policy(policy::EncounterPolicy, ics, seeds)
+function test_policy(policy::EncounterPolicy, ics, seeds; store_hist=false)
     ts = Array(EncounterTest, length(ics))
     for i in 1:length(ics)
         ts[i] = EncounterTest(EncounterTestInputData(ics[i], policy=policy, seed=seeds[i]))
     end
-    run!(ts, store_hist=false, parallel=true)
+    run!(ts, store_hist=store_hist, parallel=true)
     return ts
 end
 
