@@ -1,8 +1,16 @@
+Wed 18 Mar 2015 10:40:45 AM PDT
+Ripples definitely gone with 50k sims, probably also with 30k
+extending the grid helps extend the curve - still bunching at the very end
+
+[X] regenerate initial conditions
+[ ] run turning with tighter range of lambda
+[ ] run trl with larger action set
+
 Tue 17 Mar 2015 05:01:26 PM PDT
-[ ] get rid of ripples
-    [ ] symmetry
-    [ ] try an individual value iteration run
-[ ] get rid of bunching
+[X] get rid of ripples
+    [X] symmetry
+    [X] try an individual value iteration run
+[X] get rid of bunching
     [X] look at extent of conservative zone for high lambda
         looks like this is the problem
 
@@ -10,8 +18,8 @@ Tue 17 Mar 2015 05:01:26 PM PDT
 [X] Change to 500 ft NMAC
 [X] symmetry
 [X] expand grid
-[ ] start more limited box
-[ ] run turning a bunch
+[X] start more limited box
+[X] run turning a bunch
 
 Mon 16 Mar 2015 10:36:36 PM PDT
 Immediate questions:

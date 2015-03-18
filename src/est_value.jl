@@ -9,7 +9,7 @@ import Dates
 phi = FEATURES
 
 # @show phi.description
-@show file_prefix = "turning_test"
+@show file_prefix = "no_ripple_30k"
 
 # @everywhere const lD = SIM.legal_D
 # @everywhere const actions = EncounterAction[HeadingHRL(D) for D in [lD, 2.0*lD, 3.0*lD, 5.0*lD, 10.0*lD]]
@@ -28,7 +28,7 @@ rng0 = MersenneTwister(0)
 theta = zeros(length(phi))
 snap_generator(rng) = gen_state_snap_to_grid(rng, INTRUDER_GRID, GOAL_GRID)
 
-iters = 50000*ones(Int64,30)
+iters = 30000*ones(Int64,30)
 
 for i in 1:length(iters)
     tic()
@@ -49,13 +49,13 @@ for i in 1:length(iters)
     toc()
 end
 
-@show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
+@show filename = "../data/$(file_prefix)_$(Dates.format(Dates.now(),"u-d_HHMM")).value"
 
 JLD.@save filename phi theta 
 
 # theta = find_value(phi, rew, actions, INTRUDER_GRID, GOAL_GRID, parallel=true, iters=50000*ones(Int64,30))
 
-
+readline(STDIN)
 
 # try
 #     rm("../data/current.value")

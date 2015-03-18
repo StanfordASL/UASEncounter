@@ -6,6 +6,8 @@ N = 10000
 
 # collision_fname = "../data/10k_collisions.ic"
 # mixed_fname = "../data/10k_mixed.ic"
+# collision_fname = "../data/box_10k_collisions.ic"
+# mixed_fname = "../data/box_10k_mixed.ic"
 collision_fname = "../data/box_10k_collisions.ic"
 mixed_fname = "../data/box_10k_mixed.ic"
 
