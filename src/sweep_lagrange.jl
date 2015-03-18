@@ -8,8 +8,6 @@ import ArgParse
 import HDF5, JLD
 import Dates
 
-using Debug
-
 s = ArgParse.ArgParseSettings()
 
 ArgParse.@add_arg_table s begin
@@ -34,7 +32,7 @@ if a_arg == "turning"
     # lambdas = logspace(3,7,6)
     lambdas = logspace(1,5,8)
     # iters=[10000*ones(Int64,59),50000]
-    iters = [10000]
+    iters = 50000*ones(Int64,30)
 elseif a_arg == "trl"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
