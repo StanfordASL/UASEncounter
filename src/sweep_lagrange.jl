@@ -25,7 +25,7 @@ args = ArgParse.parse_args(s)
 phi = FEATURES
 
 a_arg = args["a"]
-iters=[10000*ones(Int64,29),50000]
+iters=[10000*ones(Int64,34),50000]
 # @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
 if a_arg == "turning"
     @show actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
