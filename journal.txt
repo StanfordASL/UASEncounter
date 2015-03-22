@@ -1,3 +1,8 @@
+Sun 22 Mar 2015 12:02:55 AM PDT
+what the heck - that spreadsheet just keeps deleting my csv entries
+running test with hrl bounded at 500 action
+how can the bounded hrl cause more deviations than the unbounded static version?
+
 Wed 18 Mar 2015 12:11:32 PM PDT
 Big things left to do
 1. Why aren't the static TRL points all on the Paretto frontier

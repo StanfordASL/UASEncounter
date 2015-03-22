@@ -23,6 +23,7 @@ min_D = 0.0
 target_rr = 0.05
 sims_per_iter = 10000
 
+bound = 500.0
 Ds = Float64[]
 risk_ratios = Float64[]
 deviations = Float64[]
@@ -33,7 +34,8 @@ baseline_completion_time = 31
 while max_D - min_D > 1.0
     println("===================")
     @show new_D = (max_D + min_D)/2.0
-    policy = ConstPolicy(HeadingHRL(new_D))
+    # policy = ConstPolicy(HeadingHRL(new_D))
+    policy = ConstPolicy(BoundedHeadingHRL(new_D,bound))
     # n_nmac = 0
     # ts = Array(EncounterTest, sims_per_iter)
     # for i in 1:sims_per_iter
@@ -71,4 +73,4 @@ while max_D - min_D > 1.0
     end
 end
 
-JLD.@save filename Ds risk_ratios deviations avg_delays baseline_completion_time avg_delays_all
+JLD.@save filename Ds risk_ratios deviations avg_delays baseline_completion_time avg_delays_all bound

@@ -2,7 +2,7 @@ module EncounterModel
 
 import Base.hash
 
-export EncounterAction, EncounterState, PostDecisionState, SimParams, IntruderParams, OwnshipParams, IntruderState, OwnshipState, HeadingHRL, BankControl, RewardModel, DeviationAndTimeReward
+export EncounterAction, EncounterState, PostDecisionState, SimParams, IntruderParams, OwnshipParams, IntruderState, OwnshipState, HeadingHRL, BoundedHeadingHRL, BankControl, RewardModel, DeviationAndTimeReward
 export SIM, OWNSHIP, INTRUDER, REWARD
 export dist, mindist, toca, encounter_dynamics, reward, ==, hash, post_decision_state, encounter_dynamics
 export heading_hrl
@@ -14,6 +14,7 @@ typealias IntruderState AbstractVector{Float64}
 # x, y, psi
 
 abstract EncounterAction
+abstract HRLAction <: EncounterAction
 
 type EncounterState
     os::OwnshipState
@@ -24,13 +25,16 @@ end
 EncounterState(os::OwnshipState, is::IntruderState, end_state::Bool) = EncounterState(os, is, end_state, false)
 typealias PostDecisionState EncounterState
 
-type HeadingHRL <: EncounterAction
+type HeadingHRL <: HRLAction
     D_buffered::Float64
     # hrl::Function
 end
 ==(u::HeadingHRL,v::HeadingHRL) = u.D_buffered==v.D_buffered
 
-
+type BoundedHeadingHRL <: HRLAction # bounded heading hrl
+    D_buffered::Float64
+    bound::Float64 # maximum active distance
+end
 
 type BankControl <: EncounterAction
     bank::Float64

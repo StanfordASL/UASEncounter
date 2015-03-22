@@ -48,10 +48,10 @@ function ownship_control(op::OwnshipParams, ip::IntruderParams, state::Encounter
     return action
 end
 
-function ownship_control(op::OwnshipParams, ip::IntruderParams, state::EncounterState, action::HeadingHRL)
+function ownship_control(op::OwnshipParams, ip::IntruderParams, state::EncounterState, action::HRLAction)
 #     @show state
 #     @show desired_heading
-    desired_heading = heading_hrl(state, action.D_buffered, op, ip)
+    desired_heading = heading_hrl(state, action, op, ip)
     diff = desired_heading-state.os[3]
     while diff > pi; diff-=2*pi; end
     while diff < -pi; diff+=2*pi; end
