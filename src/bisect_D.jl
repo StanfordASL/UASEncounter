@@ -23,7 +23,7 @@ min_D = 0.0
 target_rr = 0.05
 sims_per_iter = 10000
 
-bound = 500.0
+bound = 0.0
 Ds = Float64[]
 risk_ratios = Float64[]
 deviations = Float64[]

@@ -50,10 +50,11 @@ while length(collision_ics) < N
     refs = Array(Any, nround)
     ts = Array(EncounterTest,nround)
     ics = Array(EncounterState,nround)
+    seeds = rand(Uint32, nround)
     for i = 1:nround
         # ic = gen_init_state(gen_rng) 
         ics[i] = gen_box_state(gen_rng) 
-        ts[i] = EncounterTest(EncounterTestInputData(ics[i], policy=policy, seed=s))
+        ts[i] = EncounterTest(EncounterTestInputData(ics[i], policy=policy, seed=seeds[i]))
     end
 
     run!(ts, store_hist=false, parallel=true)
@@ -61,6 +62,7 @@ while length(collision_ics) < N
     for i = 1:nround
         t = ts[i]
         ic = ics[i]
+        s = seeds[i]
 
         if t.output.nmac
             push!(collision_ics, ic)
@@ -68,7 +70,6 @@ while length(collision_ics) < N
         end
         
         print("\rfinished test $i")
-        s+=1
 
         if first_round
             push!(mixed_ics, ic)

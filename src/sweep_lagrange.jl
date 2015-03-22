@@ -32,7 +32,7 @@ if a_arg == "turning"
     # lambdas = logspace(3,7,6)
     # lambdas = logspace(1,5,8)
     # lambdas = logspace(2,4,4)
-    lambdas = [200, 400, 550, 700]
+    lambdas = [100, 200, 400, 550, 700]
     # iters=[10000*ones(Int64,59),50000]
     iters = 50000*ones(Int64,35)
 elseif a_arg == "trl"
@@ -62,6 +62,10 @@ elseif a_arg == "trlzero"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [0.0, lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
     lambdas = logspace(2,4,6)
+elseif a_arg == "trlinsane"
+    lD = SIM.legal_D
+    @show actions = EncounterAction[HeadingHRL(D) for D in [0.0, lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
+    lambdas = [0]
 elseif a_arg == "trlbounded"
     lD = SIM.legal_D
     actions = EncounterAction[HeadingHRL(D) for D in [0.0, lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]

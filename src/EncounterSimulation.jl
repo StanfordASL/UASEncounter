@@ -54,7 +54,7 @@ type EncounterTestInputData
     op::OwnshipParams
     sim::SimParams
     initial::EncounterState
-    random_seed::Int
+    random_seed
     steps::Int
 
     rm::RewardModel
@@ -66,7 +66,7 @@ type EncounterTestInputData
                                    0, 200, REWARD,ConstPolicy(BankControl(0.0)))
     EncounterTestInputData(initial::EncounterState;
                            policy::EncounterPolicy=ConstPolicy(BankControl(0.0)),
-                           seed::Int=0,
+                           seed=0,
                            rm::RewardModel=REWARD,
                            id=nothing) = new(id,INTRUDER, OWNSHIP, SIM, initial, seed, 200, rm, policy)
 end

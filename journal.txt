@@ -1,7 +1,33 @@
+Sun 22 Mar 2015 02:40:05 PM PDT
+
+[X] check on results - essentially the same as expected
+[X] why does insane not work as expected?
+        because of little wrinkles in the value function
+[X] why aren't collisions working!?
+        because seeds were saved wrong! regenerating initial conditions
+        checked
+[ ] decide on final 10 deg results
+        sweep D 150, 180, 200, 220, 240, 300, 500
+        turning lambda 100, 200, 400, 550, 700
+            started cheonan 3/22 4 pm
+        trlzero lambda logspace(2,4,6)
+        trlbounded lambda logspace(2,4,6)
+        trl lambda logspace
+[ ] generate final 10 deg results
+[ ] text Kate
+[ ] make it so that we can reliably change the noise
+[ ] start other noise simulations
+[ ] generate policy and value figures
+
 Sun 22 Mar 2015 12:02:55 AM PDT
 what the heck - that spreadsheet just keeps deleting my csv entries
 running test with hrl bounded at 500 action
 how can the bounded hrl cause more deviations than the unbounded static version?
+
+static trl limited by 100 (0036 I think) does really well...
+static trl with 0.0 bound somehow still changes behavior with D...
+0006 is 500 bound
+2335 is 1000 bound
 
 Wed 18 Mar 2015 12:11:32 PM PDT
 Big things left to do
