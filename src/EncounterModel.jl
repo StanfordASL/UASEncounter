@@ -30,6 +30,8 @@ type HeadingHRL <: EncounterAction
 end
 ==(u::HeadingHRL,v::HeadingHRL) = u.D_buffered==v.D_buffered
 
+
+
 type BankControl <: EncounterAction
     bank::Float64
 end
