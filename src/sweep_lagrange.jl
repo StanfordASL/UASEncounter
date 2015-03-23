@@ -32,7 +32,8 @@ if a_arg == "turning"
     # lambdas = logspace(3,7,6)
     # lambdas = logspace(1,5,8)
     # lambdas = logspace(2,4,4)
-    lambdas = [100, 200, 400, 550, 700]
+    # lambdas = [100, 200, 400, 550, 700]
+    lambdas = [300, 500, 700, 1000, 2000]
     # iters=[10000*ones(Int64,59),50000]
     iters = 50000*ones(Int64,35)
 elseif a_arg == "trl"
@@ -52,7 +53,7 @@ elseif a_arg == "trlbox"
 elseif a_arg == "trlcons"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
-    lambdas = logspace(1,4,6)
+    lambdas = logspace(2,5,7)
 elseif a_arg == "trllong"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
