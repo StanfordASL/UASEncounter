@@ -1,3 +1,9 @@
+Sun 22 Mar 2015 10:45:16 PM PDT
+Turning needs to go further 300, 450 600 800 1000
+running Mar 23 0020 on cheonan
+and trlcons needs to go further logspace(2,5,7)
+running on cambridge Mar 23 0030
+
 Sun 22 Mar 2015 02:40:05 PM PDT
 
 [X] check on results - essentially the same as expected
@@ -14,7 +20,6 @@ Sun 22 Mar 2015 02:40:05 PM PDT
         trlbounded lambda logspace(2,4,6)
         trl lambda logspace
 [ ] generate final 10 deg results
-[ ] text Kate
 [ ] make it so that we can reliably change the noise
 [ ] start other noise simulations
 [ ] generate policy and value figures
