@@ -18,6 +18,10 @@ ArgParse.@add_arg_table s begin
     "--Qvalue"
         help = "use Q-value policies"
         action = :store_true
+    "--ndeg"
+        help = "intruder noise standard dev in degrees"
+        arg_type = Float64
+        default = 10.0
 end
 
 args = ArgParse.parse_args(s)
@@ -25,6 +29,10 @@ args = ArgParse.parse_args(s)
 phi = FEATURES
 
 a_arg = args["a"]
+ndeg_arg = args["ndeg"]
+
+INTRUDER.heading_std = ndeg_arg*pi/180.0
+
 iters=[10000*ones(Int64,34),50000]
 # @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
 if a_arg == "turning"
@@ -33,8 +41,12 @@ if a_arg == "turning"
     # lambdas = logspace(1,5,8)
     # lambdas = logspace(2,4,4)
     # lambdas = [100, 200, 400, 550, 700]
-    lambdas = [300, 500, 700, 1000, 2000]
+    lambdas = [300, 500, 700, 1000, 1500]
     # iters=[10000*ones(Int64,59),50000]
+    iters = 50000*ones(Int64,35)
+elseif a_arg == "turningpick"
+    @show actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
+    lambdas = [1500]
     iters = 50000*ones(Int64,35)
 elseif a_arg == "trl"
     lD = SIM.legal_D
@@ -157,6 +169,6 @@ for i in 1:length(lambdas)
     risk_ratios[i] = risk_ratio
     toc()
 
-    @show filename = "../data/$(a_arg)_lagrange_sweep_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
-    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args rms
+    @show filename = "../data/$(a_arg)_sweep_$(ndeg_arg)_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
+    JLD.@save filename lambdas risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args rms SIM INTRUDER OWNSHIP
 end
