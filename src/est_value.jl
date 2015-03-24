@@ -1,7 +1,7 @@
 using EncounterModel
-using EncounterFeatures
+@everywhere using EncounterFeatures
 using GridInterpolations
-using EncounterValueIteration
+@everywhere using EncounterValueIteration
 import EncounterVisualization
 import HDF5, JLD
 import Dates
@@ -9,11 +9,12 @@ import Dates
 phi = FEATURES
 
 # @show phi.description
-@show file_prefix = "no_ripple_30k"
+# @show file_prefix = "no_ripple_30k"
+@show file_prefix = "cdc_val_fig"
 
-# @everywhere const lD = SIM.legal_D
-# @everywhere const actions = EncounterAction[HeadingHRL(D) for D in [lD, 2.0*lD, 3.0*lD, 5.0*lD, 10.0*lD]]
-actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
+lD = SIM.legal_D
+@show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
+# actions = EncounterAction[BankControl(b) for b in [-OWNSHIP.max_phi, -OWNSHIP.max_phi/2, 0.0, OWNSHIP.max_phi/2, OWNSHIP.max_phi]]
 
 rng0 = MersenneTwister(0)
 
@@ -26,9 +27,8 @@ rew = REWARD
 rng0 = MersenneTwister(0)
 
 theta = zeros(length(phi))
-snap_generator(rng) = gen_state_snap_to_grid(rng, INTRUDER_GRID, GOAL_GRID)
 
-iters = 30000*ones(Int64,30)
+iters = 10000*ones(Int64,35)
 
 for i in 1:length(iters)
     tic()

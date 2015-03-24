@@ -25,6 +25,8 @@ N = 10000
 collision_fname = "../data/box_10k_collisions_$(int(ndeg_arg)).ic"
 mixed_fname = "../data/box_10k_mixed_$(int(ndeg_arg)).ic"
 
+INTRUDER.heading_std=args["ndeg"]*pi/180.0
+
 collision_ics = EncounterState[]
 collision_seeds = Int64[]
 

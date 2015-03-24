@@ -53,25 +53,15 @@ elseif a_arg == "trl"
     # @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.5*lD, 3.0*lD]]
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.2*lD, 1.5*lD, 2.0*lD]]
     lambdas = logspace(1.8,4,5)
-elseif a_arg == "trlmatch"
-    lD = SIM.legal_D
-    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 2.3*lD]]
-    lambdas = logspace(1,5,8)
-elseif a_arg == "trlbox"
-    lD = SIM.legal_D
-    # @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.2*lD, 1.4*lD, 1.6*lD, 2.0*lD]]
-    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.2*lD, 1.5*lD, 2.0*lD, 2.5*lD]]
-    lambdas = logspace(1,5,8)
 elseif a_arg == "trlcons"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
     lambdas = logspace(2,5,7)
-elseif a_arg == "trllong"
+elseif a_arg == "trl5"
     lD = SIM.legal_D
-    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
-    lambdas = [100]
-    iters = 50000*ones(Int64,35)
-elseif a_arg == "trlzero"
+    @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.3*lD, 1.6*lD, 2.0*lD, 3.0*lD]]
+    lambdas = logspace(2,4,5)
+eelseif a_arg == "trlzero"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [0.0, lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
     lambdas = logspace(2,4,6)
