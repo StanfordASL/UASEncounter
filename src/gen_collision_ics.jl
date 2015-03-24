@@ -1,6 +1,20 @@
 using EncounterModel
 using EncounterSimulation
 import HDF5, JLD
+import ArgParse
+
+s = ArgParse.ArgParseSettings()
+
+ArgParse.@add_arg_table s begin
+    "--ndeg"
+        help = "intruder noise standard dev in degrees"
+        arg_type = Float64
+        default = 10.0
+end
+
+args = ArgParse.parse_args(s)
+
+ndeg_arg = args["ndeg"]
 
 N = 10000
 
@@ -8,8 +22,8 @@ N = 10000
 # mixed_fname = "../data/10k_mixed.ic"
 # collision_fname = "../data/box_10k_collisions.ic"
 # mixed_fname = "../data/box_10k_mixed.ic"
-collision_fname = "../data/box_10k_collisions.ic"
-mixed_fname = "../data/box_10k_mixed.ic"
+collision_fname = "../data/box_10k_collisions_$(int(ndeg_arg)).ic"
+mixed_fname = "../data/box_10k_mixed_$(int(ndeg_arg)).ic"
 
 collision_ics = EncounterState[]
 collision_seeds = Int64[]

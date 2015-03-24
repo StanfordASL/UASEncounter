@@ -89,15 +89,23 @@ else
     error("Invalid -a input. Expected \"trl\" or \"turning\"; got \"$a_arg\"")
 end
 
+cfnames = {10.0 => "../data/box_10k_collisions.ic",
+            5.0 => "../data/box_10k_collisions_5.ic",
+            15.0 => "../data/box_10k_collisions_15.ic"}
+mfnames = {10.0 => "../data/box_10k_mixed.ic",
+            5.0 => "../data/box_10k_mixed_5.ic",
+            15.0 => "../data/box_10k_mixed_5.ic"}
+
+c_ic_fname = cfnames[ndeg_arg]
+m_ic_fname = mfnames[ndeg_arg]
+
 # c_ic_fname = "../data/10k_collisions.ic"
-c_ic_fname = "../data/box_10k_collisions.ic"
 col_data = JLD.load(c_ic_fname)
 
 col_ics = col_data["ics"]
 col_seeds = col_data["seeds"]
 
 # m_ic_fname = "../data/10k_mixed.ic"
-m_ic_fname = "../data/box_10k_mixed.ic"
 mixed_data = JLD.load(m_ic_fname)
 
 mixed_ics = mixed_data["ics"]
