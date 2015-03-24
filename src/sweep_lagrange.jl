@@ -59,7 +59,8 @@ elseif a_arg == "trlcons"
 elseif a_arg == "trl5"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [lD, 1.3*lD, 1.6*lD, 2.0*lD, 3.0*lD]]
-    lambdas = logspace(2,4,5)
+    # lambdas = logspace(2,4,5)
+    lambdas = [30]
 elseif a_arg == "trlzero"
     lD = SIM.legal_D
     @show actions = EncounterAction[HeadingHRL(D) for D in [0.0, lD, 1.5*lD, 2.0*lD, 3.0*lD, 4.0*lD]]
