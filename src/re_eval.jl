@@ -94,6 +94,6 @@ for i in 1:length(policies)
 end
 
 input_filename = args["filename"]
-@show filename = "../data/re_eval_$(ndeg_arg)_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
-JLD.@save filename risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args SIM INTRUDER OWNSHIP data
+@show filename = "../data/re_eval_$(int(ndeg_arg))_$(Dates.format(Dates.now(),"u-d_HHMM")).jld"
+JLD.@save filename risk_ratios policies deviations avg_delays baseline_completion_time avg_delays_all args SIM INTRUDER OWNSHIP input_filename
 
