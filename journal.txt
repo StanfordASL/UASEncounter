@@ -1,4 +1,11 @@
+Thu 09 Apr 2015 02:39:35 PM PDT
+
+[ ] MCTS evaluate
+    [ ] hash for all actions
+[ ] Learn about GUIs
+
 Sun 22 Mar 2015 10:45:16 PM PDT
+
 Turning needs to go further 300, 450 600 800 1000
 running Mar 23 0020 on cheonan
 and trlcons needs to go further logspace(2,5,7)

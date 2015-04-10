@@ -30,16 +30,20 @@ type HeadingHRL <: HRLAction
     # hrl::Function
 end
 ==(u::HeadingHRL,v::HeadingHRL) = u.D_buffered==v.D_buffered
+hash(a::HeadingHRL) = hash(a.D_buffered)
 
 type BoundedHeadingHRL <: HRLAction # bounded heading hrl
     D_buffered::Float64
     bound::Float64 # maximum active distance
 end
+==(u::BoundedHeadingHRL,v::BoundedHeadingHRL) = u.D_buffered==v.D_buffered && u.bound==v.bound
+hash(a::BoundedHeadingHRL) = hash(a.D_buffered, hash(a.bound))
 
 type BankControl <: EncounterAction
     bank::Float64
 end
 ==(u::BankControl,v::BankControl) = u.bank==v.bank
+hash(a::BankControl) = hash(a.bank)
 
 type SimParams
     delta_t::Float64
