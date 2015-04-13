@@ -1,7 +1,8 @@
 Thu 09 Apr 2015 02:39:35 PM PDT
 
 [ ] MCTS evaluate
-    [ ] hash for all actions
+    [X] hash for all actions
+    [ ] saveable policy
 [ ] Learn about GUIs
 
 Sun 22 Mar 2015 10:45:16 PM PDT
