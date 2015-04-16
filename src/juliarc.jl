@@ -1,6 +1,6 @@
 println("executing local juliarc")
 
-@everywhere mdp_path = "/home/zach/.julia/mdp/"
+@everywhere mdp_path = "$(homedir())/.julia/mdp/"
 @everywhere include("$(mdp_path)src/MDP.jl")
 @everywhere include("$(mdp_path)src/mdps/GridWorld.jl")
 @everywhere include("$(mdp_path)src/other/auxfuncs.jl")
