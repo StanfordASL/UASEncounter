@@ -130,7 +130,7 @@ function run!(test::EncounterTest; announce=false, store_hist=true)
     return test
 end
 
-function run!(tests::Vector{EncounterTest}; store_hist=true, parallel=false, batch_size=100)
+function run!(tests::Vector{EncounterTest}; store_hist=false, parallel=false, batch_size=100)
     if parallel
         # num_batches = int(ceil(length(tests)/batch_size))
 
