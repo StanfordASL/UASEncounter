@@ -22,7 +22,8 @@ import MCTSdpw
 import Base.hash
 
 using EncounterModel
-using EncounterSimulation
+using EncounterPolicies
+# using EncounterSimulation
 
 export MCTSPolicy, query_policy, MDPEncounterState, MDPEncounterAction
 

@@ -13,9 +13,6 @@ typealias OwnshipState AbstractVector{Float64}
 typealias IntruderState AbstractVector{Float64}
 # x, y, psi
 
-abstract EncounterAction
-abstract HRLAction <: EncounterAction
-
 type EncounterState
     os::OwnshipState
     is::IntruderState
@@ -25,25 +22,6 @@ end
 EncounterState(os::OwnshipState, is::IntruderState, end_state::Bool) = EncounterState(os, is, end_state, false)
 typealias PostDecisionState EncounterState
 
-type HeadingHRL <: HRLAction
-    D_buffered::Float64
-    # hrl::Function
-end
-==(u::HeadingHRL,v::HeadingHRL) = u.D_buffered==v.D_buffered
-hash(a::HeadingHRL) = hash(a.D_buffered)
-
-type BoundedHeadingHRL <: HRLAction # bounded heading hrl
-    D_buffered::Float64
-    bound::Float64 # maximum active distance
-end
-==(u::BoundedHeadingHRL,v::BoundedHeadingHRL) = u.D_buffered==v.D_buffered && u.bound==v.bound
-hash(a::BoundedHeadingHRL) = hash(a.D_buffered, hash(a.bound))
-
-type BankControl <: EncounterAction
-    bank::Float64
-end
-==(u::BankControl,v::BankControl) = u.bank==v.bank
-hash(a::BankControl) = hash(a.bank)
 
 type SimParams
     delta_t::Float64
@@ -72,6 +50,31 @@ const SIM = SimParams(1.0, 9.8, [1000.0, 0.0], 100.0, 152.4, 1.0) #changed nmac 
 const OWNSHIP = OwnshipParams(30.0, 45.0/180.0*pi, 3.0)
 # const INTRUDER = IntruderParams(60.0, 5.0/180.0*pi)
 const INTRUDER = IntruderParams(60.0, 10.0/180.0*pi)
+
+
+abstract EncounterAction
+abstract HRLAction <: EncounterAction
+
+type HeadingHRL <: HRLAction
+    D_buffered::Float64
+    # hrl::Function
+end
+==(u::HeadingHRL,v::HeadingHRL) = u.D_buffered==v.D_buffered
+hash(a::HeadingHRL) = hash(a.D_buffered)
+
+type BoundedHeadingHRL <: HRLAction # bounded heading hrl
+    D_buffered::Float64
+    bound::Float64 # maximum active distance
+end
+==(u::BoundedHeadingHRL,v::BoundedHeadingHRL) = u.D_buffered==v.D_buffered && u.bound==v.bound
+hash(a::BoundedHeadingHRL) = hash(a.D_buffered, hash(a.bound))
+
+type BankControl <: EncounterAction
+    bank::Float64
+end
+==(u::BankControl,v::BankControl) = u.bank==v.bank
+hash(a::BankControl) = hash(a.bank)
+
 
 abstract RewardModel
 

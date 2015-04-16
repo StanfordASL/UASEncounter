@@ -2,7 +2,8 @@ Thu 09 Apr 2015 02:39:35 PM PDT
 
 [ ] MCTS evaluate
     [X] hash for all actions
-    [ ] saveable policy
+    [X] saveable policy
+    [ ] move policies to encountermodel
 [ ] Learn about GUIs
 
 Sun 22 Mar 2015 10:45:16 PM PDT

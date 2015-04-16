@@ -1,51 +1,13 @@
 module EncounterSimulation
 
+# import Debug
+
 using EncounterModel
 using EncounterFeatures
-export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind, test_policy
-
-abstract EncounterPolicy
-
-type LinearQValuePolicy <: EncounterPolicy
-    phi::FeatureBlock
-    actions::Vector{EncounterAction}
-    thetas::Vector{Vector{Float64}}
-end
-function query_policy_ind(p::LinearQValuePolicy, state::EncounterState)
-    qs=Array(Float64, length(p.actions))
-    for i in 1:length(qs)
-        qs[i] = sum(evaluate(p.phi,state)'*p.thetas[i])
-    end
-    return indmax(qs)
-end
-function query_policy(p::LinearQValuePolicy, state::EncounterState)
-    return p.actions[query_policy_ind(p,state)]
-end
-
-type LinearPostDecisionPolicy <: EncounterPolicy
-    phi::FeatureBlock
-    actions::Vector{EncounterAction}
-    theta::Vector{Float64}
-    rm::RewardModel
-end
-function query_policy_ind(p::LinearPostDecisionPolicy, state::EncounterState)
-    pdvals=Array(Float64, length(p.actions))
-    for i in 1:length(pdvals)
-        pd = post_decision_state(state, p.actions[i])
-        pdvals[i] = reward(p.rm, state, p.actions[i]) + sum(evaluate(p.phi,pd)'*p.theta)
-    end
-    return indmax(pdvals)
-end
-function query_policy(p::LinearPostDecisionPolicy, state::EncounterState)
-    return p.actions[query_policy_ind(p,state)]
-end
-
-type ConstPolicy <: EncounterPolicy
-    action::EncounterAction
-end
-function query_policy(p::ConstPolicy, state::EncounterState)
-    return p.action
-end
+using EncounterPolicies
+using MCTSGlue
+export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, test_policy
+# export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind, test_policy
 
 type EncounterTestInputData
     id
@@ -170,20 +132,24 @@ end
 
 function run!(tests::Vector{EncounterTest}; store_hist=true, parallel=false, batch_size=100)
     if parallel
-        num_batches = int(ceil(length(tests)/batch_size))
+        # num_batches = int(ceil(length(tests)/batch_size))
 
         println("spawning $(length(tests)) simulations...")
-        refs = Array(Any, num_batches)
-        for b in 1:num_batches
-            test_range = (b-1)*batch_size+1:min(length(tests),b*batch_size)
-            batch = tests[test_range]
-            refs[b] = @spawn run!(batch, parallel=false, store_hist=store_hist)
-        end
-        for b in 1:num_batches 
-            test_range = (b-1)*batch_size+1:min(length(tests),b*batch_size)
-            print("\rwaiting for test batch $b of $num_batches...")
-            tests[test_range] = fetch(refs[b])
-        end
+        # refs = Array(Any, num_batches)
+        # for b in 1:num_batches
+        #     test_range = (b-1)*batch_size+1:min(length(tests),b*batch_size)
+        #     batch = tests[test_range]
+        #     refs[b] = @spawn run!(batch, parallel=false, store_hist=store_hist)
+        # end
+        # for b in 1:num_batches 
+        #     test_range = (b-1)*batch_size+1:min(length(tests),b*batch_size)
+        #     print("\rwaiting for test batch $b of $num_batches...")
+        #     tests[test_range] = fetch(refs[b])
+        # end
+        
+        results = pmap(run!, tests, err_stop=true)
+        tests[:] = results
+
         println("\rdone with simulations")
     else
         for i in 1:length(tests)
@@ -193,12 +159,12 @@ function run!(tests::Vector{EncounterTest}; store_hist=true, parallel=false, bat
     return tests
 end
 
-function test_policy(policy::EncounterPolicy, ics, seeds; store_hist=false)
+function test_policy(policy::EncounterPolicy, ics, seeds; store_hist=false, parallel=true)
     ts = Array(EncounterTest, length(ics))
     for i in 1:length(ics)
         ts[i] = EncounterTest(EncounterTestInputData(ics[i], policy=policy, seed=seeds[i]))
     end
-    run!(ts, store_hist=store_hist, parallel=true)
+    run!(ts, store_hist=store_hist, parallel=parallel)
     return ts
 end
 
