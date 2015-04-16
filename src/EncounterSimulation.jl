@@ -75,7 +75,7 @@ function gen_init_state(rng::AbstractRNG)
     return EncounterState([ox,oy,ohead],[ix, iy, ihead],false,false)
 end
 
-function run!(test::EncounterTest; announce=false, store_hist=true)
+function run!(test::EncounterTest; announce=false, store_hist=false)
     if announce
         println("Running test $(test.input.id).")
     end
@@ -130,7 +130,8 @@ function run!(test::EncounterTest; announce=false, store_hist=true)
     return test
 end
 
-function run!(tests::Vector{EncounterTest}; store_hist=false, parallel=false, batch_size=100)
+function run!(tests::Vector{EncounterTest}; store_hist=false, parallel=false)
+# function run!(tests::Vector{EncounterTest}; store_hist=false, parallel=false, batch_size=100)
     if parallel
         # num_batches = int(ceil(length(tests)/batch_size))
 
@@ -147,7 +148,8 @@ function run!(tests::Vector{EncounterTest}; store_hist=false, parallel=false, ba
         #     tests[test_range] = fetch(refs[b])
         # end
         
-        results = pmap(run!, tests, err_stop=true)
+        run_single_arg!(t) = run!(t, store_hist=store_hist)
+        results = pmap(run_single_arg!, tests, err_stop=true)
         tests[:] = results
 
         println("\rdone with simulations")
