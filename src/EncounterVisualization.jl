@@ -5,11 +5,12 @@ using PyPlot
 using EncounterModel
 using EncounterFeatures
 using EncounterSimulation
+using EncounterPolicies
 # using PGFPlots
 
 export plot_value_grid, plot_policy_grid, plot_test, vehicle_arrow
 
-function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100;deviated=false)
+function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::IntruderState, ownship_heading::Float64, n=100;deviated=false,ownship_arrow=true)
     ymin = -600.0
     ymax = 600.0
     xmin = -100.0
@@ -28,9 +29,11 @@ function plot_value_grid(phi::FeatureBlock, theta::Vector{Float64}, is::Intruder
     idx = 50*cos(is[3])
     idy = 50*sin(is[3])
     ax[:arrow](is[2], is[1], idy, idx, head_width=20, head_length=20)
-    odx = 50*cos(ownship_heading)
-    ody = 50*sin(ownship_heading)
-    ax[:arrow](0,0, ody,odx, head_width=20, head_length=20)
+    if ownship_arrow
+        odx = 50*cos(ownship_heading)
+        ody = 50*sin(ownship_heading)
+        ax[:arrow](0,0, ody,odx, head_width=20, head_length=20)
+    end
 
     # val(x,y) = dot(phi.features(EncounterState([x,y,ownship_heading],is,false)),theta)
     # Axis(Plots.Image(val, (ymin,ymax), (xmin,xmax)))

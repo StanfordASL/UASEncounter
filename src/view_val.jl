@@ -2,6 +2,7 @@ using ArgParse
 import HDF5, JLD
 using EncounterFeatures
 import EncounterVisualization
+import PyPlot
 
 s = ArgParseSettings()
 
@@ -22,7 +23,7 @@ phi = data["phi"]
 
 oad = 0.0
 iad = 135.0
-ix = 600.0
+ix = 700.0
 iy = -250.0
 EncounterVisualization.plot_value_grid(phi,
                                        data["theta"],
@@ -30,5 +31,7 @@ EncounterVisualization.plot_value_grid(phi,
                                        pi/180.0*oad,
                                        100)
 
-println("press enter to exit")
-readline(STDIN)
+PyPlot.show()
+
+# println("press enter to exit")
+# readline(STDIN)

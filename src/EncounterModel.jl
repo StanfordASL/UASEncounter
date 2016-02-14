@@ -19,6 +19,7 @@ type EncounterState
     end_state::Bool
     has_deviated::Bool
 end
+EncounterState() = EncounterState(zeros(3),zeros(3),false,false)
 EncounterState(os::OwnshipState, is::IntruderState, end_state::Bool) = EncounterState(os, is, end_state, false)
 typealias PostDecisionState EncounterState
 

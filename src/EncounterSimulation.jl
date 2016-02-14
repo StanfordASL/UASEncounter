@@ -5,7 +5,7 @@ module EncounterSimulation
 using EncounterModel
 using EncounterFeatures
 using EncounterPolicies
-using MCTSGlue
+# using MCTSGlue
 export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, test_policy
 # export run!, EncounterTest, EncounterTestInputData, EncounterTestOutputData, EncounterPolicy, ConstPolicy, LinearQValuePolicy, make_record, extract_from_record, gen_init_state, query_policy_ind, test_policy
 

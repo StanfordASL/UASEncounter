@@ -1,3 +1,19 @@
+Wed 02 Sep 2015 02:51:21 PM PDT
+
+Getting ready for ICRA
+Need to redo figures. Why is the value in the collision zone better than the value in front of the aircraft?
+This is a post-decision policy - ugh
+
+Let's see if I can reproduce the actual value function.
+Trying to reproduce
+trlcons_lagrange_sweep_Mar-23_0410.jld
+with lambda 1000
+  "args"                   => ["Qvalue"=>false,"a"=>"trlcons"]
+
+Using est_value
+
+
+
 Thu 09 Apr 2015 02:39:35 PM PDT
 
 [ ] MCTS evaluate
